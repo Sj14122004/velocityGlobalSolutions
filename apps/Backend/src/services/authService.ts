@@ -5,7 +5,7 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../utils/jwt.js";
-import { verify } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 
 
@@ -90,7 +90,7 @@ if (!REFRESH_TOKEN_SECRET) {
 }
 
 export const refreshAccessToken = async (refreshToken: string) => {
-  const payload = verify(refreshToken, REFRESH_TOKEN_SECRET) as {
+  const payload = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET) as {
     id: number;
   };
 
