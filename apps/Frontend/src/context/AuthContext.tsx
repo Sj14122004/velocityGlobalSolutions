@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -7,13 +8,16 @@ import {
 } from "react";
 import { socket } from "../socket/socket";
 
+type Role =
+  | "ADMIN"
+  | "PROJECT_MANAGER"
+  | "DEVELOPER";
+
 type User = {
   id: number;
+  name: string;
   email: string;
-  role:
-    | "ADMIN"
-    | "PROJECT_MANAGER"
-    | "DEVELOPER";
+  role: Role;
 };
 
 type Notification = {
@@ -28,6 +32,11 @@ type Notification = {
   readAt: string | null;
 };
 
+type LoginResult = {
+  user: User;
+  accessToken: string;
+};
+
 type AuthContextType = {
   user: User | null;
   accessToken: string | null;
@@ -36,26 +45,55 @@ type AuthContextType = {
   login: (
     email: string,
     password: string
-  ) => Promise<void>;
+  ) => Promise<LoginResult>;
   logout: () => void;
 };
 
-const AuthContext = createContext<
-  AuthContextType | undefined
->(undefined);
+const AuthContext =
+  createContext<AuthContextType | undefined>(
+    undefined
+  );
 
 type AuthProviderProps = {
   children: ReactNode;
 };
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "http://localhost:5000";
+
 export const AuthProvider = ({
   children,
 }: AuthProviderProps) => {
   const [user, setUser] =
-    useState<User | null>(null);
+    useState<User | null>(() => {
+      const storedUser =
+        sessionStorage.getItem("user");
 
-  const [accessToken, setAccessToken] =
-    useState<string | null>(null);
+      if (!storedUser) {
+        return null;
+      }
+
+      try {
+        return JSON.parse(
+          storedUser
+        ) as User;
+      } catch {
+        sessionStorage.removeItem(
+          "user"
+        );
+
+        return null;
+      }
+    });
+
+  const [accessToken, setAccessTokenState] =
+    useState<string | null>(
+      () =>
+        sessionStorage.getItem(
+          "accessToken"
+        )
+    );
 
   const [notifications, setNotifications] =
     useState<Notification[]>([]);
@@ -63,29 +101,39 @@ export const AuthProvider = ({
   const [unreadCount, setUnreadCount] =
     useState(0);
 
+  const setAccessToken = useCallback(
+    (token: string | null) => {
+      if (token) {
+        sessionStorage.setItem(
+          "accessToken",
+          token
+        );
+      } else {
+        sessionStorage.removeItem(
+          "accessToken"
+        );
+      }
+
+      setAccessTokenState(token);
+    },
+    []
+  );
+
   useEffect(() => {
     const handleNotificationCreated = (
       notification: Notification
     ) => {
-      console.log(
-        "New notification received:",
-        notification
+      setNotifications(
+        (previous) => [
+          notification,
+          ...previous,
+        ]
       );
-
-      setNotifications((previous) => [
-        notification,
-        ...previous,
-      ]);
     };
 
-    const handleNotificationCountUpdated = (data: {
-      count: number;
-    }) => {
-      console.log(
-        "Unread notification count:",
-        data.count
-      );
-
+    const handleNotificationCountUpdated = (
+      data: { count: number }
+    ) => {
       setUnreadCount(data.count);
     };
 
@@ -115,17 +163,18 @@ export const AuthProvider = ({
   const login = async (
     email: string,
     password: string
-  ) => {
+  ): Promise<LoginResult> => {
     const response = await fetch(
-      "http://localhost:5000/api/auth/login",
+      `${API_URL}/api/auth/login`,
       {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type":
+            "application/json",
         },
         credentials: "include",
         body: JSON.stringify({
-          email,
+          email: email.trim(),
           password,
         }),
       }
@@ -133,34 +182,68 @@ export const AuthProvider = ({
 
     const result = await response.json();
 
-    if (!response.ok) {
+    if (
+      !response.ok ||
+      !result.success
+    ) {
       throw new Error(
         result.error?.message ||
           "Login failed"
       );
     }
 
-    const { user, accessToken } =
-      result.data;
+    if (
+      !result.data?.user ||
+      !result.data?.accessToken
+    ) {
+      throw new Error(
+        "Invalid login response"
+      );
+    }
 
-    setUser(user);
-    setAccessToken(accessToken);
+    const loggedInUser =
+      result.data.user as User;
+
+    const token =
+      result.data.accessToken as string;
+
+    setUser(loggedInUser);
+
+    sessionStorage.setItem(
+      "user",
+      JSON.stringify(loggedInUser)
+    );
+
+    setAccessToken(token);
 
     socket.auth = {
-      token: accessToken,
+      token,
     };
 
-    socket.connect();
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    return {
+      user: loggedInUser,
+      accessToken: token,
+    };
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     socket.disconnect();
 
     setUser(null);
     setAccessToken(null);
+
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem(
+      "accessToken"
+    );
+
     setNotifications([]);
     setUnreadCount(0);
-  };
+  }, [setAccessToken]);
 
   return (
     <AuthContext.Provider
@@ -179,7 +262,8 @@ export const AuthProvider = ({
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context =
+    useContext(AuthContext);
 
   if (!context) {
     throw new Error(

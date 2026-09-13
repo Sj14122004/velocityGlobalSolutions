@@ -1,412 +1,424 @@
-import React from "react";
-import {
-  Users,
-  UserPlus,
-  FolderKanban,
-  CheckCircle2,
-  Clock3,
-  TrendingUp,
-  MoreVertical,
-  Search,
-  Bell,
-  Plus,
-} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import "../../public/pages/admin/AdminDashboard.css";
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: "Admin" | "Project Manager" | "Developer";
-  status: "Active" | "Inactive";
-}
+const API_URL = "http://localhost:5000";
 
-const recentUsers: User[] = [
-  {
-    id: 1,
-    name: "Rahul Sharma",
-    email: "rahul@velozity.com",
-    role: "Project Manager",
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Priya Singh",
-    email: "priya@velozity.com",
-    role: "Developer",
-    status: "Active",
-  },
-  {
-    id: 3,
-    name: "Aman Verma",
-    email: "aman@velozity.com",
-    role: "Developer",
-    status: "Active",
-  },
-  {
-    id: 4,
-    name: "Neha Patel",
-    email: "neha@velozity.com",
-    role: "Project Manager",
-    status: "Inactive",
-  },
-];
+type DashboardData = {
+  users: {
+    total: number;
+    admins: number;
+    projectManagers: number;
+    developers: number;
+    active: number;
+  };
+  projects: {
+    total: number;
+  };
+  tasks: {
+    total: number;
+    toDo: number;
+    inProgress: number;
+    inReview: number;
+    completed: number;
+    pending: number;
+    overdue: number;
+  };
+  completionRate: number;
+  recentUsers: {
+    id: number;
+    name: string;
+    email: string;
+    role: "ADMIN" | "PROJECT_MANAGER" | "DEVELOPER";
+    isActive: boolean;
+    createdAt: string;
+  }[];
+};
 
-const AdminDashboard: React.FC = () => {
+type DashboardResponse = {
+  success: boolean;
+  data: DashboardData;
+};
+
+const AdminDashboard = () => {
+  const { accessToken, user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      if (!accessToken) {
+        logout();
+        navigate("/", { replace: true });
+        return;
+      }
+
+      try {
+        const response = await axios.get<DashboardResponse>(
+          `${API_URL}/api/dashboard`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+            withCredentials: true,
+          }
+        );
+
+        setDashboard(response.data.data);
+      } catch (error) {
+        if (
+          axios.isAxiosError(error) &&
+          error.response?.status === 401
+        ) {
+          logout();
+          navigate("/", { replace: true });
+          return;
+        }
+
+        if (axios.isAxiosError(error)) {
+          setError(
+            error.response?.data?.error?.message ||
+              "Failed to load dashboard."
+          );
+        } else {
+          setError("Failed to load dashboard.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboard();
+  }, [accessToken, logout, navigate]);
+
+  const filteredUsers = useMemo(() => {
+    if (!dashboard) return [];
+
+    const value = search.toLowerCase().trim();
+
+    if (!value) return dashboard.recentUsers;
+
+    return dashboard.recentUsers.filter(
+      (item) =>
+        item.name.toLowerCase().includes(value) ||
+        item.email.toLowerCase().includes(value) ||
+        item.role.toLowerCase().includes(value)
+    );
+  }, [dashboard, search]);
+
+  const formatRole = (role: string) => {
+    if (role === "PROJECT_MANAGER") return "Project Manager";
+    if (role === "DEVELOPER") return "Developer";
+    return "Admin";
+  };
+
+  if (loading) {
+    return (
+      <div className="dashboard-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading dashboard...</p>
+      </div>
+    );
+  }
+
+  if (error || !dashboard) {
+    return (
+      <div className="dashboard-error">
+        <div className="error-card">
+          <h2>Unable to load dashboard</h2>
+          <p>{error || "Something went wrong."}</p>
+          <button onClick={() => window.location.reload()}>
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="admin-dashboard">
-      {/* Sidebar */}
-      <aside className="admin-sidebar">
-        <div className="sidebar-logo">
-          <div className="logo-icon">V</div>
-          <div>
-            <h2>Velozity</h2>
-            <span>Global Solutions</span>
-          </div>
-        </div>
 
-        <nav className="sidebar-nav">
-          <p className="nav-title">MAIN MENU</p>
-
-          <a href="/admin/dashboard" className="nav-item active">
-            <TrendingUp size={19} />
-            <span>Dashboard</span>
-          </a>
-
-          <a href="/admin/users" className="nav-item">
-            <Users size={19} />
-            <span>Users</span>
-          </a>
-
-          <a href="/admin/projects" className="nav-item">
-            <FolderKanban size={19} />
-            <span>Projects</span>
-          </a>
-
-          <p className="nav-title management-title">MANAGEMENT</p>
-
-          <a href="/admin/users/create" className="nav-item">
-            <UserPlus size={19} />
-            <span>Add User</span>
-          </a>
-        </nav>
-
-        <div className="sidebar-bottom">
-          <div className="admin-profile">
-            <div className="profile-avatar">A</div>
-
-            <div className="profile-info">
-              <strong>Admin</strong>
-              <span>Administrator</span>
-            </div>
-
-            <MoreVertical size={18} />
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="admin-main">
-        {/* Header */}
-        <header className="dashboard-header">
-          <div>
+      <main className="dashboard-content">
+        <header className="dashboard-topbar">
+          <div className="welcome-section">
             <h1>Dashboard</h1>
-            <p>Welcome back, Admin. Here's what's happening today.</p>
+            <p>
+              Welcome back, Admin. Here's what's happening today.
+            </p>
           </div>
 
-          <div className="header-actions">
-            <div className="search-box">
-              <Search size={18} />
-              <input
-                type="text"
-                placeholder="Search..."
-              />
-            </div>
-
-            <button className="notification-btn">
-              <Bell size={20} />
+          <div className="topbar-actions">
+            <button
+              className="notification-button"
+              title="Notifications"
+            >
+              ♧
               <span className="notification-dot"></span>
             </button>
 
-            <button
-              className="add-user-btn"
-              onClick={() => {
-                window.location.href = "/admin/users/create";
-              }}
+            <a
+              href="/admin/users/create"
+              className="add-user-button"
             >
-              <Plus size={18} />
+              <span>+</span>
               Add User
-            </button>
+            </a>
           </div>
         </header>
 
-        {/* Stats */}
         <section className="stats-grid">
           <div className="stat-card">
             <div className="stat-top">
-              <div className="stat-icon users-icon">
-                <Users size={22} />
-              </div>
-
-              <span className="stat-growth">
-                <TrendingUp size={14} />
-                12.5%
+              <div className="stat-icon blue">♧</div>
+              <span className="stat-trend">
+                Active {dashboard.users.active}
               </span>
             </div>
-
-            <div className="stat-content">
-              <span>Total Users</span>
-              <h2>48</h2>
+            <div className="stat-label">Total Users</div>
+            <div className="stat-value">
+              {dashboard.users.total}
             </div>
-
-            <p className="stat-footer">Compared to last month</p>
+            <div className="stat-description">
+              Active organization members
+            </div>
           </div>
 
           <div className="stat-card">
             <div className="stat-top">
-              <div className="stat-icon manager-icon">
-                <UserPlus size={22} />
-              </div>
-
-              <span className="stat-label">Active</span>
+              <div className="stat-icon green">♧</div>
+              <span className="stat-status">Active</span>
             </div>
-
-            <div className="stat-content">
-              <span>Project Managers</span>
-              <h2>8</h2>
+            <div className="stat-label">Project Managers</div>
+            <div className="stat-value">
+              {dashboard.users.projectManagers}
             </div>
-
-            <p className="stat-footer">Managing current projects</p>
+            <div className="stat-description">
+              Managing current projects
+            </div>
           </div>
 
           <div className="stat-card">
             <div className="stat-top">
-              <div className="stat-icon developer-icon">
-                <Users size={22} />
-              </div>
-
-              <span className="stat-label">Active</span>
+              <div className="stat-icon light-blue">♧</div>
+              <span className="stat-status">Active</span>
             </div>
-
-            <div className="stat-content">
-              <span>Developers</span>
-              <h2>38</h2>
+            <div className="stat-label">Developers</div>
+            <div className="stat-value">
+              {dashboard.users.developers}
             </div>
-
-            <p className="stat-footer">Working on assigned tasks</p>
+            <div className="stat-description">
+              Working on assigned tasks
+            </div>
           </div>
 
           <div className="stat-card">
             <div className="stat-top">
-              <div className="stat-icon project-icon">
-                <FolderKanban size={22} />
-              </div>
-
-              <span className="stat-growth">
-                <TrendingUp size={14} />
-                8.2%
+              <div className="stat-icon orange">▣</div>
+              <span className="stat-trend">
+                {dashboard.tasks.total} Tasks
               </span>
             </div>
-
-            <div className="stat-content">
-              <span>Total Projects</span>
-              <h2>24</h2>
+            <div className="stat-label">Total Projects</div>
+            <div className="stat-value">
+              {dashboard.projects.total}
             </div>
-
-            <p className="stat-footer">Across all teams</p>
+            <div className="stat-description">
+              Across all teams
+            </div>
           </div>
         </section>
 
-        {/* Middle Section */}
-        <section className="dashboard-content-grid">
-          {/* Project Overview */}
-          <div className="dashboard-card project-overview">
-            <div className="card-header">
+        <section className="middle-grid">
+          <div className="project-overview card">
+            <div className="card-title-row">
               <div>
-                <h3>Project Overview</h3>
+                <h2>Project Overview</h2>
                 <p>Current project status</p>
               </div>
-
-              <button className="view-btn">View All</button>
+              <a href="/admin/projects">View All</a>
             </div>
 
-            <div className="project-status-grid">
-              <div className="project-status">
-                <div className="status-icon completed">
-                  <CheckCircle2 size={20} />
+            <div className="project-stats">
+              <div className="project-stat">
+                <div className="project-stat-icon completed">
+                  ✓
                 </div>
-
                 <div>
                   <span>Completed</span>
-                  <strong>9</strong>
+                  <strong>{dashboard.tasks.completed}</strong>
                 </div>
               </div>
 
-              <div className="project-status">
-                <div className="status-icon progress">
-                  <TrendingUp size={20} />
+              <div className="project-stat">
+                <div className="project-stat-icon progress">
+                  ↗
                 </div>
-
                 <div>
                   <span>In Progress</span>
-                  <strong>11</strong>
+                  <strong>{dashboard.tasks.inProgress}</strong>
                 </div>
               </div>
 
-              <div className="project-status">
-                <div className="status-icon pending">
-                  <Clock3 size={20} />
+              <div className="project-stat">
+                <div className="project-stat-icon pending">
+                  ◷
                 </div>
-
                 <div>
                   <span>Pending</span>
-                  <strong>4</strong>
+                  <strong>{dashboard.tasks.pending}</strong>
                 </div>
               </div>
             </div>
 
-            <div className="progress-section">
-              <div className="progress-heading">
+            <div className="completion-section">
+              <div className="completion-header">
                 <span>Overall completion</span>
-                <strong>72%</strong>
+                <strong>{dashboard.completionRate}%</strong>
               </div>
 
-              <div className="progress-bar">
-                <div className="progress-value"></div>
+              <div className="completion-bar">
+                <div
+                  className="completion-progress"
+                  style={{
+                    width: `${dashboard.completionRate}%`,
+                  }}
+                />
               </div>
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="dashboard-card quick-actions">
-            <div className="card-header">
+          <div className="quick-actions card">
+            <div className="card-title-row">
               <div>
-                <h3>Quick Actions</h3>
+                <h2>Quick Actions</h2>
                 <p>Manage your workspace</p>
               </div>
             </div>
 
-            <button
-              className="quick-action"
-              onClick={() => {
-                window.location.href = "/admin/users/create";
-              }}
-            >
-              <div className="quick-icon">
-                <UserPlus size={19} />
-              </div>
+            <div className="quick-action-list">
+              <a
+                href="/admin/users/create"
+                className="quick-action"
+              >
+                <div className="quick-icon">♧+</div>
+                <div>
+                  <strong>Add New User</strong>
+                  <span>
+                    Create an admin, manager or developer
+                  </span>
+                </div>
+              </a>
 
-              <div>
-                <strong>Add New User</strong>
-                <span>Create an admin, manager or developer</span>
-              </div>
-            </button>
+              <a
+                href="/admin/users"
+                className="quick-action"
+              >
+                <div className="quick-icon">♧</div>
+                <div>
+                  <strong>Manage Users</strong>
+                  <span>View and manage all users</span>
+                </div>
+              </a>
 
-            <button
-              className="quick-action"
-              onClick={() => {
-                window.location.href = "/admin/users";
-              }}
-            >
-              <div className="quick-icon">
-                <Users size={19} />
-              </div>
-
-              <div>
-                <strong>Manage Users</strong>
-                <span>View and manage all users</span>
-              </div>
-            </button>
-
-            <button
-              className="quick-action"
-              onClick={() => {
-                window.location.href = "/admin/projects";
-              }}
-            >
-              <div className="quick-icon">
-                <FolderKanban size={19} />
-              </div>
-
-              <div>
-                <strong>View Projects</strong>
-                <span>Monitor all active projects</span>
-              </div>
-            </button>
+              <a
+                href="/admin/projects"
+                className="quick-action"
+              >
+                <div className="quick-icon">▣</div>
+                <div>
+                  <strong>View Projects</strong>
+                  <span>Monitor all active projects</span>
+                </div>
+              </a>
+            </div>
           </div>
         </section>
 
-        {/* Recent Users */}
-        <section className="dashboard-card recent-users">
-          <div className="card-header">
+        <section className="recent-users card">
+          <div className="card-title-row">
             <div>
-              <h3>Recent Users</h3>
+              <h2>Recent Users</h2>
               <p>Recently added team members</p>
             </div>
 
-            <button
-              className="view-btn"
-              onClick={() => {
-                window.location.href = "/admin/users";
-              }}
-            >
+            <a href="/admin/users">
               View All Users
-            </button>
+            </a>
           </div>
 
-          <div className="table-container">
+          <div className="users-table-wrapper">
             <table className="users-table">
               <thead>
                 <tr>
-                  <th>User</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Action</th>
+                  <th>USER</th>
+                  <th>ROLE</th>
+                  <th>STATUS</th>
+                  <th>ACTION</th>
                 </tr>
               </thead>
 
               <tbody>
-                {recentUsers.map((user) => (
-                  <tr key={user.id}>
-                    <td>
-                      <div className="user-cell">
-                        <div className="user-avatar">
-                          {user.name.charAt(0)}
+                {filteredUsers.length > 0 ? (
+                  filteredUsers.map((item) => (
+                    <tr key={item.id}>
+                      <td>
+                        <div className="table-user">
+                          <div className="table-avatar">
+                            {item.name.charAt(0).toUpperCase()}
+                          </div>
+
+                          <div>
+                            <strong>{item.name}</strong>
+                            <span>{item.email}</span>
+                          </div>
                         </div>
+                      </td>
 
-                        <div>
-                          <strong>{user.name}</strong>
-                          <span>{user.email}</span>
-                        </div>
-                      </div>
-                    </td>
+                      <td>
+                        <span className="table-role">
+                          {formatRole(item.role)}
+                        </span>
+                      </td>
 
-                    <td>
-                      <span className="role-badge">
-                        {user.role}
-                      </span>
-                    </td>
+                      <td>
+                        <span
+                          className={
+                            item.isActive
+                              ? "table-status active"
+                              : "table-status inactive"
+                          }
+                        >
+                          {item.isActive
+                            ? "Active"
+                            : "Inactive"}
+                        </span>
+                      </td>
 
-                    <td>
-                      <span
-                        className={`status-badge ${
-                          user.status === "Active"
-                            ? "active-status"
-                            : "inactive-status"
-                        }`}
-                      >
-                        <span className="status-dot"></span>
-                        {user.status}
-                      </span>
-                    </td>
-
-                    <td>
-                      <button className="table-action">
-                        <MoreVertical size={18} />
-                      </button>
+                      <td>
+                        <button
+                          className="table-action"
+                          title="View user"
+                        >
+                          →
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="empty-table"
+                    >
+                      No users found.
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

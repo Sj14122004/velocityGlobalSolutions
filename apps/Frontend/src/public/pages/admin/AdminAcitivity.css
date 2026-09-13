@@ -1,0 +1,160 @@
+.admin-activity {
+  min-height: 100vh;
+  background: #f7f9fc;
+  color: #111827;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.activity-content {
+  width: 100%;
+  min-width: 0;
+  padding: 0 32px 32px;
+  box-sizing: border-box;
+}
+
+.activity-card {
+  background: #ffffff;
+  border: 1px solid #e2e6ec;
+  border-radius: 13px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.025);
+  padding: 24px;
+  margin-top: 10px;
+}
+.activity-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #edf0f3;
+}
+.activity-card-header h2 {
+  margin: 0;
+  color: #121b2d;
+  font-size: 18px;
+  line-height: 1.2;
+  font-weight: 750;
+  letter-spacing: -0.4px;
+}
+.activity-card-header p {
+  margin: 5px 0 0;
+  color: #9099a9;
+  font-size: 11px;
+}
+.activity-count {
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 600;
+}
+.activity-list {
+  width: 100%;
+}
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 18px 4px;
+  border-bottom: 1px solid #eef0f3;
+}
+.activity-item:last-child {
+  border-bottom: none;
+}
+.activity-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background: #f0f2f6;
+  color: #4b5563;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.activity-details {
+  flex: 1;
+  min-width: 0;
+}
+.activity-message {
+  color: #596477;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.activity-message strong {
+  color: #182236;
+  font-weight: 700;
+}
+.activity-old-status {
+  color: #697386;
+}
+.activity-new-status {
+  color: #2563eb;
+  font-weight: 600;
+}
+.activity-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 5px;
+  color: #9aa3b2;
+  font-size: 9px;
+}
+.empty-activity {
+  padding: 45px;
+  text-align: center;
+  color: #9aa3b2;
+  font-size: 12px;
+}
+.activity-loading,
+.activity-error {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.activity-loading {
+  flex-direction: column;
+  gap: 12px;
+  color: #6b7280;
+}
+.activity-error-card {
+  padding: 30px;
+  text-align: center;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+.activity-error-card h2 {
+  margin: 0 0 8px;
+}
+.activity-error-card p {
+  margin: 0 0 18px;
+  color: #6b7280;
+}
+.activity-error-card button {
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  cursor: pointer;
+}
+@media (max-width: 900px) {
+  .activity-content {
+    padding: 0 24px 24px;
+  }
+}
+@media (max-width: 600px) {
+  .activity-content {
+    padding: 0 14px 20px;
+  }
+  .activity-card {
+    padding: 18px;
+  }
+  .activity-card-header {
+    flex-direction: column;
+  }
+  .activity-message {
+    font-size: 11px;
+  }
+}

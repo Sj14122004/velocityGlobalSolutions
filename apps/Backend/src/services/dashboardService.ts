@@ -3,8 +3,47 @@ import type { Role } from "@prisma/client";
 import { getOnlineUsersCount } from "../socket/socket.js";
 
 export const getAdminDashboard = async () => {
-  const [totalProjects, tasksByStatus, overdueCount] = await Promise.all([
+  const [
+    totalUsers,
+    activeUsers,
+    adminCount,
+    projectManagerCount,
+    developerCount,
+    totalProjects,
+    totalTasks,
+    tasksByStatus,
+    overdueCount,
+    recentUsers,
+  ] = await Promise.all([
+    prisma.user.count(),
+
+    prisma.user.count({
+      where: {
+        isActive: true,
+      },
+    }),
+
+    prisma.user.count({
+      where: {
+        role: "ADMIN",
+      },
+    }),
+
+    prisma.user.count({
+      where: {
+        role: "PROJECT_MANAGER",
+      },
+    }),
+
+    prisma.user.count({
+      where: {
+        role: "DEVELOPER",
+      },
+    }),
+
     prisma.project.count(),
+
+    prisma.task.count(),
 
     prisma.task.groupBy({
       by: ["status"],
@@ -16,6 +55,21 @@ export const getAdminDashboard = async () => {
     prisma.task.count({
       where: {
         isOverdue: true,
+      },
+    }),
+
+    prisma.user.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 5,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
       },
     }),
   ]);
@@ -31,13 +85,42 @@ export const getAdminDashboard = async () => {
     taskStatusCounts[item.status] = item._count.id;
   }
 
-  const activeUsers = getOnlineUsersCount();
+  const pendingTasks =
+    taskStatusCounts.TO_DO +
+    taskStatusCounts.IN_REVIEW;
+
+  const completionPercentage =
+    totalTasks === 0
+      ? 0
+      : Math.round(
+          (taskStatusCounts.DONE / totalTasks) * 100
+        );
 
   return {
-    totalProjects,
-    totalTasksByStatus: taskStatusCounts,
-    overdueCount,
-    activeUsers,
+    users: {
+      total: totalUsers,
+      active: activeUsers,
+      admin: adminCount,
+      projectManagers: projectManagerCount,
+      developers: developerCount,
+    },
+
+    projects: {
+      total: totalProjects,
+    },
+
+    tasks: {
+      total: totalTasks,
+      completed: taskStatusCounts.DONE,
+      inProgress: taskStatusCounts.IN_PROGRESS,
+      inReview: taskStatusCounts.IN_REVIEW,
+      toDo: taskStatusCounts.TO_DO,
+      pending: pendingTasks,
+      overdue: overdueCount,
+      completionPercentage,
+    },
+
+    recentUsers,
   };
 };
 
