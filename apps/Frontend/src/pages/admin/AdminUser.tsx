@@ -127,11 +127,6 @@ const AdminUsers = () => {
     return "Admin";
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/", { replace: true });
-  };
-
   if (loading) {
     return (
       <div className="users-loading">

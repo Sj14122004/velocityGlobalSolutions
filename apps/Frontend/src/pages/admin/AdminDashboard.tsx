@@ -43,12 +43,12 @@ type DashboardResponse = {
 };
 
 const AdminDashboard = () => {
-  const { accessToken, user, logout } = useAuth();
+  const { accessToken, logout } = useAuth();
   const navigate = useNavigate();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
+  const [search] = useState("");
 
   useEffect(() => {
     const fetchDashboard = async () => {

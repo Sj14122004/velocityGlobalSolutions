@@ -6,22 +6,6 @@ import "../public/pages/login.css";
 
 type Role = "ADMIN" | "PROJECT_MANAGER" | "DEVELOPER";
 
-type LoginResponse = {
-  success: boolean;
-  data?: {
-    user: {
-      id: number;
-      name: string;
-      email: string;
-      role: Role;
-    };
-    accessToken: string;
-  };
-  error?: {
-    code: string;
-    message: string;
-  };
-};
 
 const roles: { value: Role; label: string }[] = [
   {
@@ -37,9 +21,6 @@ const roles: { value: Role; label: string }[] = [
     label: "Developer",
   },
 ];
-
-const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const Login = () => {
   const navigate = useNavigate();
