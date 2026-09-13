@@ -72,7 +72,9 @@ export const createTask = async (
 
   const recipientIds = new Set<number>();
 
+  if (result.task.assignedToId !== null) {
   recipientIds.add(result.task.assignedToId);
+}
 
   if (result.project.createdById) {
     recipientIds.add(result.project.createdById);
