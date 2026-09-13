@@ -6,6 +6,9 @@ import Layout from "./pages/components/Layout";
 import AdminProjects from "./pages/admin/AdminProjects";
 import AdminTasks from "./pages/admin/AdminTasks";
 import AdminActivity from "./pages/admin/AdminActivity";
+import AdminCreateUser from "./pages/admin/AdminCreateUser";
+import AdminUserDetails from "./pages/admin/AdminUserDetails";
+
 
 
 const App = () => {
@@ -18,6 +21,8 @@ const App = () => {
         <Route path="/admin/projects" element={<Layout><AdminProjects /></Layout>} />
         <Route path="/admin/tasks" element={<Layout><AdminTasks /></Layout>} />
         <Route path="/admin/activity" element={<Layout><AdminActivity /></Layout>} />
+        <Route path="/admin/users/create" element={<Layout><AdminCreateUser /></Layout>} />
+        <Route path="/admin/users/:role/:id" element={<Layout><AdminUserDetails /></Layout>} />
       </Routes>
     </BrowserRouter>
   );

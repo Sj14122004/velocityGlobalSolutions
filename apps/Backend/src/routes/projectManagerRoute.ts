@@ -3,6 +3,8 @@ import {
   createProjectManagerController,
   getProjectManagersController,
   getProjectManagerByIdController,
+  updateProjectManagerController,
+  deleteProjectManagerController,
 } from "../controller/projectManagerController.js";
 import { wrapAsync } from "../utils/wrapAsync.js";
 import { authenticate } from "../middleware/authMiddleware.js";
@@ -11,6 +13,8 @@ import { validate } from "../middleware/validateMiddleware.js";
 import {
   createProjectManagerSchema,
   getProjectManagerByIdSchema,
+  updateProjectManagerSchema,
+  deleteProjectManagerSchema,
 } from "../validators/projectManagerValidator.js";
 
 const router = Router();
@@ -36,6 +40,22 @@ router.get(
   authorize("ADMIN"),
   validate(getProjectManagerByIdSchema),
   wrapAsync(getProjectManagerByIdController)
+);
+
+router.patch(
+  "/:id",
+  authenticate,
+  authorize("ADMIN"),
+  validate(updateProjectManagerSchema),
+  wrapAsync(updateProjectManagerController)
+);
+
+router.delete(
+  "/:id",
+  authenticate,
+  authorize("ADMIN"),
+  validate(deleteProjectManagerSchema),
+  wrapAsync(deleteProjectManagerController)
 );
 
 export default router;

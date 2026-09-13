@@ -35,3 +35,26 @@ export const getProjectManagerById = async (id: number) =>
       role: "PROJECT_MANAGER",
     },
   });
+
+  export const updateProjectManager = async (
+  id: number,
+  data: {
+    name?: string;
+    email?: string;
+  }
+) =>
+  prisma.user.updateMany({
+    where: {
+      id,
+      role: "PROJECT_MANAGER",
+    },
+    data,
+  });
+
+export const deleteProjectManager = async (id: number) =>
+  prisma.user.deleteMany({
+    where: {
+      id,
+      role: "PROJECT_MANAGER",
+    },
+  });

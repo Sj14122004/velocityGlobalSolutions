@@ -3,6 +3,8 @@ import {
   createProjectManager,
   getProjectManagers,
   getProjectManagerById,
+  updateProjectManager,
+  deleteProjectManager,
 } from "../services/projectManagerService.js";
 
 export const createProjectManagerController = async (
@@ -14,7 +16,6 @@ export const createProjectManagerController = async (
     email: req.body.email,
     password: req.body.password,
   });
-
   res.status(201).json({
     success: true,
     data: {
@@ -33,7 +34,6 @@ export const getProjectManagersController = async (
   res: Response
 ) => {
   const projectManagers = await getProjectManagers();
-
   res.status(200).json({
     success: true,
     data: projectManagers,
@@ -45,9 +45,7 @@ export const getProjectManagerByIdController = async (
   res: Response
 ) => {
   const id = Number(req.params.id);
-
   const projectManager = await getProjectManagerById(id);
-
   if (!projectManager) {
     res.status(404).json({
       success: false,
@@ -58,9 +56,56 @@ export const getProjectManagerByIdController = async (
     });
     return;
   }
-
   res.status(200).json({
     success: true,
     data: projectManager,
+  });
+};
+
+export const updateProjectManagerController = async (
+  req: Request,
+  res: Response
+) => {
+  const id = Number(req.params.id);
+  const result = await updateProjectManager(id, {
+    name: req.body.name,
+    email: req.body.email,
+  });
+  if (result.count === 0) {
+    res.status(404).json({
+      success: false,
+      error: {
+        code: "PROJECT_MANAGER_NOT_FOUND",
+        message: "Project Manager not found",
+      },
+    });
+    return;
+  }
+  const projectManager = await getProjectManagerById(id);
+  res.status(200).json({
+    success: true,
+    data: projectManager,
+  });
+};
+
+export const deleteProjectManagerController = async (
+  req: Request,
+  res: Response
+) => {
+  const id = Number(req.params.id);
+  const result = await deleteProjectManager(id);
+  if (result.count === 0) {
+    res.status(404).json({
+      success: false,
+      error: {
+        code: "PROJECT_MANAGER_NOT_FOUND",
+        message: "Project Manager not found",
+      },
+    });
+    return;
+  }
+  res.status(200).json({
+    success: true,
+    message: "Project Manager deleted successfully",
   });
 };

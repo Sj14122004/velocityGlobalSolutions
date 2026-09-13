@@ -1,0 +1,195 @@
+.admin-create-user {
+  min-height: 100vh;
+  background: #f7f9fc;
+  color: #111827;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.create-user-content {
+  width: 100%;
+  min-width: 0;
+  padding: 0 32px 32px;
+  box-sizing: border-box;
+}
+
+.create-user-topbar {
+  min-height: 144px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+}
+
+.create-user-topbar h1 {
+  margin: 0 0 8px;
+  font-size: 34px;
+  font-weight: 750;
+  letter-spacing: -0.8px;
+}
+
+.create-user-topbar p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 15px;
+}
+
+.back-button {
+  border: 1px solid #e2e6ed;
+  background: #ffffff;
+  color: #374151;
+  padding: 11px 16px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.back-button:hover {
+  background: #f9fafb;
+}
+
+.create-user-card {
+  max-width: 760px;
+  background: #ffffff;
+  border: 1px solid #e6e9ef;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+  margin: 0 auto;
+}
+
+.create-user-card-header {
+  padding: 26px 28px;
+  border-bottom: 1px solid #eef0f4;
+}
+
+.create-user-card-header h2 {
+  margin: 0 0 6px;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.create-user-card-header p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.create-user-form {
+  padding: 28px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.form-group label {
+  color: #374151;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  height: 46px;
+  padding: 0 13px;
+  box-sizing: border-box;
+  border: 1px solid #dfe3ea;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #9ca3af;
+  box-shadow: 0 0 0 3px rgba(156, 163, 175, 0.12);
+}
+
+.form-group input::placeholder {
+  color: #9ca3af;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.cancel-button,
+.create-button {
+  min-width: 110px;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancel-button {
+  border: 1px solid #dfe3ea;
+  background: #ffffff;
+  color: #374151;
+}
+
+.cancel-button:hover {
+  background: #f9fafb;
+}
+
+.create-button {
+  border: 1px solid #111827;
+  background: #111827;
+  color: #ffffff;
+}
+
+.create-button:hover {
+  background: #1f2937;
+}
+
+.cancel-button:disabled,
+.create-button:disabled,
+.back-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 700px) {
+  .create-user-content {
+    padding: 0 18px 24px;
+  }
+
+  .create-user-topbar {
+    min-height: 120px;
+    align-items: flex-start;
+    justify-content: center;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .create-user-topbar h1 {
+    font-size: 28px;
+  }
+
+  .create-user-card-header,
+  .create-user-form {
+    padding: 22px;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .cancel-button,
+  .create-button {
+    width: 100%;
+  }
+}

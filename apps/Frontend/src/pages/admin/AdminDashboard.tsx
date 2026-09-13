@@ -403,6 +403,7 @@ const AdminDashboard = () => {
                         <button
                           className="table-action"
                           title="View user"
+                          onClick={() => navigate(`/admin/users/${item.role}/${item.id}`)}
                         >
                           →
                         </button>
