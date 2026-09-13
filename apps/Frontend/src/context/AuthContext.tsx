@@ -47,6 +47,10 @@ type AuthContextType = {
     password: string
   ) => Promise<LoginResult>;
   logout: () => void;
+  markNotificationAsRead: (
+    notificationId: number
+  ) => Promise<void>;
+  markAllNotificationsAsRead: () => Promise<void>;
 };
 
 const AuthContext =
@@ -79,10 +83,7 @@ export const AuthProvider = ({
           storedUser
         ) as User;
       } catch {
-        sessionStorage.removeItem(
-          "user"
-        );
-
+        sessionStorage.removeItem("user");
         return null;
       }
     });
@@ -120,15 +121,94 @@ export const AuthProvider = ({
   );
 
   useEffect(() => {
+    const loadNotifications = async () => {
+      if (!accessToken) {
+        setNotifications([]);
+        setUnreadCount(0);
+        return;
+      }
+
+      try {
+        const [
+          notificationsResponse,
+          countResponse,
+        ] = await Promise.all([
+          fetch(
+            `${API_URL}/api/notifications`,
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+              credentials: "include",
+            }
+          ),
+          fetch(
+            `${API_URL}/api/notifications/unread-count`,
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+              credentials: "include",
+            }
+          ),
+        ]);
+
+        if (
+          !notificationsResponse.ok ||
+          !countResponse.ok
+        ) {
+          console.error(
+            "Failed to load notifications"
+          );
+          return;
+        }
+
+        const notificationsResult =
+          await notificationsResponse.json();
+
+        const countResult =
+          await countResponse.json();
+
+        if (notificationsResult.success) {
+          setNotifications(
+            notificationsResult.data
+          );
+        }
+
+        if (countResult.success) {
+          setUnreadCount(
+            countResult.data.count
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Failed to load notifications:",
+          error
+        );
+      }
+    };
+
+    loadNotifications();
+
     const handleNotificationCreated = (
       notification: Notification
     ) => {
-      setNotifications(
-        (previous) => [
+      setNotifications((previous) => {
+        const alreadyExists =
+          previous.some(
+            (item) =>
+              item.id === notification.id
+          );
+
+        if (alreadyExists) {
+          return previous;
+        }
+
+        return [
           notification,
           ...previous,
-        ]
-      );
+        ];
+      });
     };
 
     const handleNotificationCountUpdated = (
@@ -158,7 +238,115 @@ export const AuthProvider = ({
         handleNotificationCountUpdated
       );
     };
-  }, []);
+  }, [accessToken]);
+
+  const markNotificationAsRead = async (
+    notificationId: number
+  ) => {
+    if (!accessToken) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/notifications/${notificationId}/read`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          credentials: "include",
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.error?.message ||
+            "Failed to mark notification as read"
+        );
+      }
+
+      setNotifications((previous) =>
+        previous.map((notification) =>
+          notification.id === notificationId
+            ? {
+                ...notification,
+                isRead: true,
+                readAt:
+                  result.data?.readAt ||
+                  new Date().toISOString(),
+              }
+            : notification
+        )
+      );
+
+      setUnreadCount((previous) =>
+        previous > 0
+          ? previous - 1
+          : 0
+      );
+    } catch (error) {
+      console.error(
+        "Failed to mark notification as read:",
+        error
+      );
+    }
+  };
+
+  const markAllNotificationsAsRead =
+    async () => {
+      if (!accessToken) {
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${API_URL}/api/notifications/read-all`,
+          {
+            method: "PATCH",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+            credentials: "include",
+          }
+        );
+
+        const result =
+          await response.json();
+
+        if (
+          !response.ok ||
+          !result.success
+        ) {
+          throw new Error(
+            result.error?.message ||
+              "Failed to mark all notifications as read"
+          );
+        }
+
+        const readAt =
+          new Date().toISOString();
+
+        setNotifications((previous) =>
+          previous.map(
+            (notification) => ({
+              ...notification,
+              isRead: true,
+              readAt,
+            })
+          )
+        );
+
+        setUnreadCount(0);
+      } catch (error) {
+        console.error(
+          "Failed to mark all notifications as read:",
+          error
+        );
+      }
+    };
 
   const login = async (
     email: string,
@@ -216,6 +404,9 @@ export const AuthProvider = ({
 
     setAccessToken(token);
 
+    setNotifications([]);
+    setUnreadCount(0);
+
     socket.auth = {
       token,
     };
@@ -235,14 +426,13 @@ export const AuthProvider = ({
 
     setUser(null);
     setAccessToken(null);
+    setNotifications([]);
+    setUnreadCount(0);
 
     sessionStorage.removeItem("user");
     sessionStorage.removeItem(
       "accessToken"
     );
-
-    setNotifications([]);
-    setUnreadCount(0);
   }, [setAccessToken]);
 
   return (
@@ -254,6 +444,8 @@ export const AuthProvider = ({
         unreadCount,
         login,
         logout,
+        markNotificationAsRead,
+        markAllNotificationsAsRead,
       }}
     >
       {children}

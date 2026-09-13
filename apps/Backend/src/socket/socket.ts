@@ -4,27 +4,31 @@ import { prisma } from "../lib/prisma.js";
 import { authenticateSocket } from "./socketAuth.js";
 import { getActivities } from "../services/activityService.js";
 
-
 const onlineUsers = new Map<number, number>();
 
-export const getOnlineUsersCount = () => onlineUsers.size;
+export const getOnlineUsersCount = () => {
+  return onlineUsers.size;
+};
 
+export const initializeSocket = (
+  httpServer: HttpServer
+) => {
+  const frontendUrl =
+    process.env.FRONTEND_URL ||
+    "http://localhost:5173";
 
-export const initializeSocket = (httpServer: HttpServer) => {
+  const allowedOrigins = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    frontendUrl,
+  ];
+
   const io = new Server(httpServer, {
     cors: {
-      origin:
-        process.env.FRONTEND_URL ||
-        "http://localhost:5173",
+      origin: allowedOrigins,
       credentials: true,
     },
   });
-
-  // Track active sockets for each user
-
-  const onlineUsers = new Map<number, number>();
-
-  // Authenticate every socket connection
 
   io.use(authenticateSocket);
 
@@ -35,8 +39,6 @@ export const initializeSocket = (httpServer: HttpServer) => {
       `User connected: ${user.email}`
     );
 
-    // Track user connection
-
     const currentConnections =
       onlineUsers.get(user.id) ?? 0;
 
@@ -45,11 +47,7 @@ export const initializeSocket = (httpServer: HttpServer) => {
       currentConnections + 1
     );
 
-    // Personal user room
-
     socket.join(`user-${user.id}`);
-
-    // Admin global activity room
 
     if (user.role === "ADMIN") {
       socket.join("admin-feed");
@@ -59,16 +57,12 @@ export const initializeSocket = (httpServer: HttpServer) => {
       );
     }
 
-    // Notify admins about online users
-
     io.to("admin-feed").emit(
       "online-users-updated",
       {
         count: onlineUsers.size,
       }
     );
-
-    // Get missed activities from database
 
     socket.on(
       "get-missed-activities",
@@ -92,7 +86,6 @@ export const initializeSocket = (httpServer: HttpServer) => {
                     "Invalid project ID",
                 }
               );
-
               return;
             }
 
@@ -109,7 +102,8 @@ export const initializeSocket = (httpServer: HttpServer) => {
           socket.emit(
             "missed-activities",
             {
-              activities,
+              activities:
+                activities.slice(0, 20),
             }
           );
         } catch (error) {
@@ -130,8 +124,6 @@ export const initializeSocket = (httpServer: HttpServer) => {
       }
     );
 
-    // Join project
-
     socket.on(
       "join-project",
       async (projectId: unknown) => {
@@ -141,11 +133,14 @@ export const initializeSocket = (httpServer: HttpServer) => {
             !Number.isInteger(projectId) ||
             projectId <= 0
           ) {
-            socket.emit("project-error", {
-              code: "INVALID_PROJECT_ID",
-              message: "Invalid project ID",
-            });
-
+            socket.emit(
+              "project-error",
+              {
+                code: "INVALID_PROJECT_ID",
+                message:
+                  "Invalid project ID",
+              }
+            );
             return;
           }
 
@@ -161,15 +156,16 @@ export const initializeSocket = (httpServer: HttpServer) => {
             });
 
           if (!project) {
-            socket.emit("project-error", {
-              code: "PROJECT_NOT_FOUND",
-              message: "Project not found",
-            });
-
+            socket.emit(
+              "project-error",
+              {
+                code: "PROJECT_NOT_FOUND",
+                message:
+                  "Project not found",
+              }
+            );
             return;
           }
-
-          // Admin can access every project
 
           if (user.role === "ADMIN") {
             socket.join(
@@ -183,20 +179,22 @@ export const initializeSocket = (httpServer: HttpServer) => {
             return;
           }
 
-          // Project Manager can access only their projects
-
           if (
-            user.role === "PROJECT_MANAGER"
+            user.role ===
+            "PROJECT_MANAGER"
           ) {
             if (
-              project.createdById !== user.id
+              project.createdById !==
+              user.id
             ) {
-              socket.emit("project-error", {
-                code: "FORBIDDEN",
-                message:
-                  "You do not have access to this project",
-              });
-
+              socket.emit(
+                "project-error",
+                {
+                  code: "FORBIDDEN",
+                  message:
+                    "You do not have access to this project",
+                }
+              );
               return;
             }
 
@@ -211,15 +209,15 @@ export const initializeSocket = (httpServer: HttpServer) => {
             return;
           }
 
-          // Developer can receive activity only
-          // for tasks assigned to them
-
-          if (user.role === "DEVELOPER") {
+          if (
+            user.role === "DEVELOPER"
+          ) {
             const assignedTask =
               await prisma.task.findFirst({
                 where: {
                   projectId,
-                  assignedToId: user.id,
+                  assignedToId:
+                    user.id,
                 },
                 select: {
                   id: true,
@@ -227,18 +225,20 @@ export const initializeSocket = (httpServer: HttpServer) => {
               });
 
             if (!assignedTask) {
-              socket.emit("project-error", {
-                code: "FORBIDDEN",
-                message:
-                  "You do not have an assigned task in this project",
-              });
-
+              socket.emit(
+                "project-error",
+                {
+                  code: "FORBIDDEN",
+                  message:
+                    "You do not have an assigned task in this project",
+                }
+              );
               return;
             }
 
-            // Developer does not join project room.
-            // Developer receives assigned task events
-            // through their personal room.
+            socket.join(
+              `user-${user.id}`
+            );
 
             console.log(
               `${user.email} has access to assigned tasks in project-${projectId}`
@@ -247,27 +247,31 @@ export const initializeSocket = (httpServer: HttpServer) => {
             return;
           }
 
-          socket.emit("project-error", {
-            code: "FORBIDDEN",
-            message:
-              "You do not have permission to access this project",
-          });
+          socket.emit(
+            "project-error",
+            {
+              code: "FORBIDDEN",
+              message:
+                "You do not have permission to access this project",
+            }
+          );
         } catch (error) {
           console.error(
             "Project room error:",
             error
           );
 
-          socket.emit("project-error", {
-            code: "PROJECT_ACCESS_ERROR",
-            message:
-              "Unable to join project",
-          });
+          socket.emit(
+            "project-error",
+            {
+              code: "PROJECT_ACCESS_ERROR",
+              message:
+                "Unable to join project",
+            }
+          );
         }
       }
     );
-
-    // Leave project
 
     socket.on(
       "leave-project",
@@ -291,8 +295,6 @@ export const initializeSocket = (httpServer: HttpServer) => {
       }
     );
 
-    // Disconnect
-
     socket.on("disconnect", () => {
       const connections =
         onlineUsers.get(user.id) ?? 0;
@@ -309,8 +311,6 @@ export const initializeSocket = (httpServer: HttpServer) => {
       console.log(
         `User disconnected: ${user.email}`
       );
-
-      // Notify admins about online users
 
       io.to("admin-feed").emit(
         "online-users-updated",

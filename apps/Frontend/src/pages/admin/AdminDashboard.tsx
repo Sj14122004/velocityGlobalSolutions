@@ -2,9 +2,33 @@ import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { socket } from "../../socket/socket";
 import "../../public/pages/admin/AdminDashboard.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+type Activity = {
+  id: number;
+  projectId: number;
+  taskId: number;
+  userId: number;
+  oldStatus: string;
+  newStatus: string;
+  createdAt: string;
+  user?: {
+    id: number;
+    name: string;
+    role: string;
+  };
+  task?: {
+    id: number;
+    title: string;
+  };
+  project?: {
+    id: number;
+    name: string;
+  };
+};
 
 type DashboardData = {
   users: {
@@ -46,6 +70,7 @@ const AdminDashboard = () => {
   const { accessToken, logout } = useAuth();
   const navigate = useNavigate();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search] = useState("");
@@ -96,6 +121,51 @@ const AdminDashboard = () => {
     fetchDashboard();
   }, [accessToken, logout, navigate]);
 
+  useEffect(() => {
+    if (!accessToken) {
+      setActivities([]);
+      return;
+    }
+
+    const fetchActivities = async () => {
+      try {
+        const response = await axios.get(
+          `${API_URL}/api/activities`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+            withCredentials: true,
+          }
+        );
+
+        if (response.data.success) {
+          setActivities(response.data.data);
+        }
+      } catch (error) {
+        console.error("Failed to load activities:", error);
+      }
+    };
+
+    const handleActivityCreated = (activity: Activity) => {
+      setActivities((previous) => {
+        if (previous.some((item) => item.id === activity.id)) {
+          return previous;
+        }
+
+        return [activity, ...previous].slice(0, 20);
+      });
+    };
+
+    fetchActivities();
+
+    socket.on("activity-created", handleActivityCreated);
+
+    return () => {
+      socket.off("activity-created", handleActivityCreated);
+    };
+  }, [accessToken]);
+
   const filteredUsers = useMemo(() => {
     if (!dashboard) return [];
 
@@ -115,6 +185,13 @@ const AdminDashboard = () => {
     if (role === "PROJECT_MANAGER") return "Project Manager";
     if (role === "DEVELOPER") return "Developer";
     return "Admin";
+  };
+
+  const formatStatus = (status: string) => {
+    return status
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
   };
 
   if (loading) {
@@ -142,7 +219,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="admin-dashboard">
-
       <main className="dashboard-content">
         <header className="dashboard-topbar">
           <div className="welcome-section">
@@ -151,7 +227,6 @@ const AdminDashboard = () => {
               Welcome back, Admin. Here's what's happening today.
             </p>
           </div>
-
           <div className="topbar-actions">
             <button
               className="notification-button"
@@ -160,7 +235,6 @@ const AdminDashboard = () => {
               ♧
               <span className="notification-dot"></span>
             </button>
-
             <a
               href="/admin/users/create"
               className="add-user-button"
@@ -187,7 +261,6 @@ const AdminDashboard = () => {
               Active organization members
             </div>
           </div>
-
           <div className="stat-card">
             <div className="stat-top">
               <div className="stat-icon green">♧</div>
@@ -201,7 +274,6 @@ const AdminDashboard = () => {
               Managing current projects
             </div>
           </div>
-
           <div className="stat-card">
             <div className="stat-top">
               <div className="stat-icon light-blue">♧</div>
@@ -215,7 +287,6 @@ const AdminDashboard = () => {
               Working on assigned tasks
             </div>
           </div>
-
           <div className="stat-card">
             <div className="stat-top">
               <div className="stat-icon orange">▣</div>
@@ -242,45 +313,34 @@ const AdminDashboard = () => {
               </div>
               <a href="/admin/projects">View All</a>
             </div>
-
             <div className="project-stats">
               <div className="project-stat">
-                <div className="project-stat-icon completed">
-                  ✓
-                </div>
+                <div className="project-stat-icon completed">✓</div>
                 <div>
                   <span>Completed</span>
                   <strong>{dashboard.tasks.completed}</strong>
                 </div>
               </div>
-
               <div className="project-stat">
-                <div className="project-stat-icon progress">
-                  ↗
-                </div>
+                <div className="project-stat-icon progress">↗</div>
                 <div>
                   <span>In Progress</span>
                   <strong>{dashboard.tasks.inProgress}</strong>
                 </div>
               </div>
-
               <div className="project-stat">
-                <div className="project-stat-icon pending">
-                  ◷
-                </div>
+                <div className="project-stat-icon pending">◷</div>
                 <div>
                   <span>Pending</span>
                   <strong>{dashboard.tasks.pending}</strong>
                 </div>
               </div>
             </div>
-
             <div className="completion-section">
               <div className="completion-header">
                 <span>Overall completion</span>
                 <strong>{dashboard.completionRate}%</strong>
               </div>
-
               <div className="completion-bar">
                 <div
                   className="completion-progress"
@@ -299,7 +359,6 @@ const AdminDashboard = () => {
                 <p>Manage your workspace</p>
               </div>
             </div>
-
             <div className="quick-action-list">
               <a
                 href="/admin/users/create"
@@ -313,7 +372,6 @@ const AdminDashboard = () => {
                   </span>
                 </div>
               </a>
-
               <a
                 href="/admin/users"
                 className="quick-action"
@@ -324,7 +382,6 @@ const AdminDashboard = () => {
                   <span>View and manage all users</span>
                 </div>
               </a>
-
               <a
                 href="/admin/projects"
                 className="quick-action"
@@ -342,15 +399,48 @@ const AdminDashboard = () => {
         <section className="recent-users card">
           <div className="card-title-row">
             <div>
+              <h2>Live Activity</h2>
+              <p>Latest project and task status changes</p>
+            </div>
+          </div>
+          <div className="quick-action-list">
+            {activities.length === 0 ? (
+              <p>No recent activity.</p>
+            ) : (
+              activities.map((activity) => (
+                <div
+                  className="quick-action"
+                  key={activity.id}
+                >
+                  <div className="quick-icon">↗</div>
+                  <div>
+                    <strong>
+                      {activity.user?.name || "User"} moved{" "}
+                      {activity.task?.title || "task"}
+                    </strong>
+                    <span>
+                      {formatStatus(activity.oldStatus)} →{" "}
+                      {formatStatus(activity.newStatus)} •{" "}
+                      {activity.project?.name || "Project"} •{" "}
+                      {new Date(
+                        activity.createdAt
+                      ).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+
+        <section className="recent-users card">
+          <div className="card-title-row">
+            <div>
               <h2>Recent Users</h2>
               <p>Recently added team members</p>
             </div>
-
-            <a href="/admin/users">
-              View All Users
-            </a>
+            <a href="/admin/users">View All Users</a>
           </div>
-
           <div className="users-table-wrapper">
             <table className="users-table">
               <thead>
@@ -361,7 +451,6 @@ const AdminDashboard = () => {
                   <th>ACTION</th>
                 </tr>
               </thead>
-
               <tbody>
                 {filteredUsers.length > 0 ? (
                   filteredUsers.map((item) => (
@@ -371,20 +460,17 @@ const AdminDashboard = () => {
                           <div className="table-avatar">
                             {item.name.charAt(0).toUpperCase()}
                           </div>
-
                           <div>
                             <strong>{item.name}</strong>
                             <span>{item.email}</span>
                           </div>
                         </div>
                       </td>
-
                       <td>
                         <span className="table-role">
                           {formatRole(item.role)}
                         </span>
                       </td>
-
                       <td>
                         <span
                           className={
@@ -393,17 +479,18 @@ const AdminDashboard = () => {
                               : "table-status inactive"
                           }
                         >
-                          {item.isActive
-                            ? "Active"
-                            : "Inactive"}
+                          {item.isActive ? "Active" : "Inactive"}
                         </span>
                       </td>
-
                       <td>
                         <button
                           className="table-action"
                           title="View user"
-                          onClick={() => navigate(`/admin/users/${item.role}/${item.id}`)}
+                          onClick={() =>
+                            navigate(
+                              `/admin/users/${item.role}/${item.id}`
+                            )
+                          }
                         >
                           →
                         </button>
@@ -412,10 +499,7 @@ const AdminDashboard = () => {
                   ))
                 ) : (
                   <tr>
-                    <td
-                      colSpan={4}
-                      className="empty-table"
-                    >
+                    <td colSpan={4} className="empty-table">
                       No users found.
                     </td>
                   </tr>

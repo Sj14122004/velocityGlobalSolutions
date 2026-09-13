@@ -41,6 +41,7 @@ export const getProjectManagerById = async (id: number) =>
   data: {
     name?: string;
     email?: string;
+    isActive?: boolean;
   }
 ) =>
   prisma.user.updateMany({

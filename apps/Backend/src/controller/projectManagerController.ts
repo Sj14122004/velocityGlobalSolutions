@@ -66,10 +66,12 @@ export const updateProjectManagerController = async (
   req: Request,
   res: Response
 ) => {
+  console.log("UPDATE PM BODY:", req.body);
   const id = Number(req.params.id);
   const result = await updateProjectManager(id, {
-    name: req.body.name,
-    email: req.body.email,
+  name: req.body.name,
+  email: req.body.email,
+  isActive: req.body.isActive,
   });
   if (result.count === 0) {
     res.status(404).json({

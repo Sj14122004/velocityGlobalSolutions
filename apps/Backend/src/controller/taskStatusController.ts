@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import type { Server } from "socket.io";
-
 import { updateTaskStatus } from "../services/taskStatusService.js";
-import { getUnreadNotificationCount } from "../services/notificationService.js";
+import { prisma } from "../lib/prisma.js";
+
 
 export const updateTaskStatusController = (io: Server) => {
   return async (req: Request, res: Response) => {
@@ -26,8 +26,6 @@ export const updateTaskStatusController = (io: Server) => {
       req.body.status
     );
 
-    // Send real-time task status update
-
     io
       .to(`project-${result.task.projectId}`)
       .to("admin-feed")
@@ -42,7 +40,28 @@ export const updateTaskStatusController = (io: Server) => {
         createdAt: result.activity.createdAt,
       });
 
-    // Send notification to Project Manager
+    io
+      .to(`project-${result.task.projectId}`)
+      .to("admin-feed")
+      .to(`user-${result.task.assignedToId}`)
+      .emit("activity-created", {
+        id: result.activity.id,
+        projectId: result.activity.projectId,
+        taskId: result.activity.taskId,
+        userId: result.activity.userId,
+        oldStatus: result.activity.oldStatus,
+        newStatus: result.activity.newStatus,
+        createdAt: result.activity.createdAt,
+        user: result.user,
+        task: {
+          id: result.task.id,
+          title: result.task.title,
+        },
+        project: {
+          id: result.project.id,
+          name: result.project.name,
+        },
+      });
 
     if (result.notification) {
       const projectManagerId = result.notification.userId;
@@ -55,9 +74,12 @@ export const updateTaskStatusController = (io: Server) => {
         );
 
       const unreadCount =
-        await getUnreadNotificationCount(
-          projectManagerId
-        );
+        await prisma.notification.count({
+          where: {
+            userId: projectManagerId,
+            isRead: false,
+          },
+        });
 
       io
         .to(`user-${projectManagerId}`)

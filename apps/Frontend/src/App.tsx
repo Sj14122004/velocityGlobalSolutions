@@ -8,7 +8,7 @@ import AdminTasks from "./pages/admin/AdminTasks";
 import AdminActivity from "./pages/admin/AdminActivity";
 import AdminCreateUser from "./pages/admin/AdminCreateUser";
 import AdminUserDetails from "./pages/admin/AdminUserDetails";
-
+import AdminProfile from "./pages/admin/AdminProfile";
 
 
 const App = () => {
@@ -23,6 +23,7 @@ const App = () => {
         <Route path="/admin/activity" element={<Layout><AdminActivity /></Layout>} />
         <Route path="/admin/users/create" element={<Layout><AdminCreateUser /></Layout>} />
         <Route path="/admin/users/:role/:id" element={<Layout><AdminUserDetails /></Layout>} />
+        <Route path="/admin/profile"element={<Layout><AdminProfile /></Layout>}/>
       </Routes>
     </BrowserRouter>
   );

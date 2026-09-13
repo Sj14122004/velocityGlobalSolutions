@@ -12,11 +12,9 @@ export const corsMiddleware = cors({
     if (!origin) {
       return callback(null, true);
     }
-
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-
     return callback(new Error(`CORS blocked origin: ${origin}`));
   },
   credentials: true,

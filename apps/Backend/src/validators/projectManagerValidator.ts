@@ -33,7 +33,8 @@ export const updateProjectManagerSchema = z.object({
       .string()
       .regex(/^\d+$/, "Project Manager ID must be a number"),
   }),
-  body: z.object({
+  body: z
+  .object({
     name: z
       .string()
       .trim()
@@ -46,8 +47,13 @@ export const updateProjectManagerSchema = z.object({
       .email("Invalid email address")
       .max(255, "Project Manager email must be at most 255 characters")
       .optional(),
-  }).refine(
-    (data) => data.name !== undefined || data.email !== undefined,
+    isActive: z.boolean().optional(),
+  })
+  .refine(
+    (data) =>
+      data.name !== undefined ||
+      data.email !== undefined ||
+      data.isActive !== undefined,
     {
       message: "At least one field is required",
     }

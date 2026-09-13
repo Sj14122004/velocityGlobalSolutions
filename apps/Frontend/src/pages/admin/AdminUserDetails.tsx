@@ -7,6 +7,8 @@ import "../../public/pages/admin/AdminUserDetails.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
+console.log("API URL:", API_URL);
+
 type Role = "ADMIN" | "PROJECT_MANAGER" | "DEVELOPER";
 
 type User = {
@@ -35,6 +37,7 @@ const AdminUserDetails = () => {
   const [userData, setUserData] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -70,21 +73,19 @@ const AdminUserDetails = () => {
               Authorization: `Bearer ${accessToken}`,
             },
             withCredentials: true,
-          }
+          },
         );
 
         const selectedUser = response.data.data;
 
         setUserData(selectedUser);
+        setIsActive(selectedUser.isActive);
         setForm({
           name: selectedUser.name,
           email: selectedUser.email,
         });
       } catch (error) {
-        if (
-          axios.isAxiosError(error) &&
-          error.response?.status === 401
-        ) {
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
           logout();
           navigate("/", { replace: true });
           return;
@@ -92,9 +93,8 @@ const AdminUserDetails = () => {
 
         toast.error(
           axios.isAxiosError(error)
-            ? error.response?.data?.error?.message ||
-                "Failed to load user."
-            : "Failed to load user."
+            ? error.response?.data?.error?.message || "Failed to load user."
+            : "Failed to load user.",
         );
       } finally {
         setLoading(false);
@@ -104,9 +104,7 @@ const AdminUserDetails = () => {
     fetchUser();
   }, [accessToken, user, role, id, logout, navigate]);
 
-  const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
 
     setForm((previous) => ({
@@ -136,35 +134,32 @@ const AdminUserDetails = () => {
           : role === "DEVELOPER"
             ? `/api/developers/${id}`
             : `/api/admins/${id}`;
-
+      console.log("Saving isActive:", isActive);
       const response = await axios.patch(
         `${API_URL}${endpoint}`,
         {
           name: form.name.trim(),
           email: form.email.trim(),
+          isActive,
         },
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
           withCredentials: true,
-        }
+        },
       );
-
+      console.log("UPDATE RESPONSE:", response.data);
       if (!response.data.success) {
         throw new Error(
-          response.data.error?.message ||
-            "Failed to update user."
+          response.data.error?.message || "Failed to update user.",
         );
       }
 
       toast.success("User updated successfully.");
       navigate("/admin/users");
     } catch (error) {
-      if (
-        axios.isAxiosError(error) &&
-        error.response?.status === 401
-      ) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
         logout();
         navigate("/", { replace: true });
         return;
@@ -172,11 +167,10 @@ const AdminUserDetails = () => {
 
       toast.error(
         axios.isAxiosError(error)
-          ? error.response?.data?.error?.message ||
-              "Failed to update user."
+          ? error.response?.data?.error?.message || "Failed to update user."
           : error instanceof Error
             ? error.message
-            : "Failed to update user."
+            : "Failed to update user.",
       );
     } finally {
       setSaving(false);
@@ -189,9 +183,7 @@ const AdminUserDetails = () => {
     }
 
     const confirmed = window.confirm(
-      `Are you sure you want to delete this ${formatRole(
-        role as Role
-      )}?`
+      `Are you sure you want to delete this ${formatRole(role as Role)}?`,
     );
 
     if (!confirmed) {
@@ -206,30 +198,23 @@ const AdminUserDetails = () => {
             ? `/api/developers/${id}`
             : `/api/admins/${id}`;
 
-      const response = await axios.delete(
-        `${API_URL}${endpoint}`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-          withCredentials: true,
-        }
-      );
+      const response = await axios.delete(`${API_URL}${endpoint}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        withCredentials: true,
+      });
 
       if (!response.data.success) {
         throw new Error(
-          response.data.error?.message ||
-            "Failed to delete user."
+          response.data.error?.message || "Failed to delete user.",
         );
       }
 
       toast.success("User deleted successfully.");
       navigate("/admin/users");
     } catch (error) {
-      if (
-        axios.isAxiosError(error) &&
-        error.response?.status === 401
-      ) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
         logout();
         navigate("/", { replace: true });
         return;
@@ -237,11 +222,10 @@ const AdminUserDetails = () => {
 
       toast.error(
         axios.isAxiosError(error)
-          ? error.response?.data?.error?.message ||
-              "Failed to delete user."
+          ? error.response?.data?.error?.message || "Failed to delete user."
           : error instanceof Error
             ? error.message
-            : "Failed to delete user."
+            : "Failed to delete user.",
       );
     }
   };
@@ -272,9 +256,7 @@ const AdminUserDetails = () => {
       <div className="admin-user-error">
         <div className="admin-user-error-card">
           <h2>User not found</h2>
-          <button
-            onClick={() => navigate("/admin/users")}
-          >
+          <button onClick={() => navigate("/admin/users")}>
             Back to Users
           </button>
         </div>
@@ -311,10 +293,7 @@ const AdminUserDetails = () => {
             </div>
           </div>
 
-          <form
-            className="user-details-form"
-            onSubmit={handleSubmit}
-          >
+          <form className="user-details-form" onSubmit={handleSubmit}>
             <div className="form-group">
               <label htmlFor="name">Name</label>
               <input
@@ -340,26 +319,32 @@ const AdminUserDetails = () => {
             <div className="user-info">
               <div>
                 <span>Role</span>
-                <strong>
-                  {formatRole(userData.role)}
-                </strong>
+                <strong>{formatRole(userData.role)}</strong>
               </div>
 
-              <div>
+              <div className="status-info">
                 <span>Status</span>
-                <strong>
-                  {userData.isActive
-                    ? "Active"
-                    : "Inactive"}
-                </strong>
+
+                {userData.role === "ADMIN" ? (
+                  <strong>{isActive ? "Active" : "Inactive"}</strong>
+                ) : (
+                  <button
+                    type="button"
+                    className={`status-toggle ${
+                      isActive ? "active" : "inactive"
+                    }`}
+                    onClick={() => setIsActive((previous) => !previous)}
+                  >
+                    <span className="status-toggle-circle"></span>
+                    {isActive ? "Active" : "Inactive"}
+                  </button>
+                )}
               </div>
 
               <div>
                 <span>Created</span>
                 <strong>
-                  {new Date(
-                    userData.createdAt
-                  ).toLocaleDateString()}
+                  {new Date(userData.createdAt).toLocaleDateString()}
                 </strong>
               </div>
             </div>
@@ -372,11 +357,7 @@ const AdminUserDetails = () => {
                 Delete User
               </button>
 
-              <button
-                type="submit"
-                className="save-button"
-                disabled={saving}
-              >
+              <button type="submit" className="save-button" disabled={saving}>
                 {saving ? "Saving..." : "Save Changes"}
               </button>
             </div>

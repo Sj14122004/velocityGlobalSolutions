@@ -36,20 +36,28 @@ export const getDeveloperById = async (id: number) =>
     },
   });
 
-  export const updateDeveloper = async (
+export const updateDeveloper = async (
   id: number,
   data: {
     name?: string;
     email?: string;
+    isActive?: boolean;
   }
-) =>
-  prisma.user.updateMany({
+) => {
+  console.log("DEVELOPER UPDATE DATA:", data);
+
+  const result = await prisma.user.updateMany({
     where: {
       id,
       role: "DEVELOPER",
     },
     data,
   });
+
+  console.log("UPDATE RESULT:", result);
+
+  return result;
+};
 
 export const deleteDeveloper = async (id: number) =>
   prisma.user.deleteMany({

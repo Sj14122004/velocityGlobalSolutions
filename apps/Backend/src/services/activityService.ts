@@ -1,30 +1,49 @@
 import { prisma } from "../lib/prisma.js";
 import type { Role } from "@prisma/client";
 
+export const createActivity = async (data: {
+  projectId: number;
+  taskId: number;
+  userId: number;
+  oldStatus: "TO_DO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
+  newStatus: "TO_DO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
+}) => {
+  return prisma.activityLog.create({
+    data: {
+      projectId: data.projectId,
+      taskId: data.taskId,
+      userId: data.userId,
+      oldStatus: data.oldStatus,
+      newStatus: data.newStatus,
+    },
+  });
+};
+
 export const getActivities = async (
   userId: number,
   role: Role,
   projectId?: number
 ) => {
-  // Admin can see all activity
+  const projectFilter =
+    projectId !== undefined
+      ? { projectId }
+      : {};
+
   if (role === "ADMIN") {
     return prisma.activityLog.findMany({
-      where: projectId
-        ? {
-            projectId,
-          }
-        : undefined,
+      where: projectFilter,
       include: {
-        task: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
         user: {
           select: {
             id: true,
             name: true,
+            role: true,
+          },
+        },
+        task: {
+          select: {
+            id: true,
+            title: true,
           },
         },
         project: {
@@ -41,26 +60,26 @@ export const getActivities = async (
     });
   }
 
-  // Project Manager can see activity only from their projects
   if (role === "PROJECT_MANAGER") {
     return prisma.activityLog.findMany({
       where: {
-        ...(projectId ? { projectId } : {}),
+        ...projectFilter,
         project: {
           createdById: userId,
         },
       },
       include: {
-        task: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
         user: {
           select: {
             id: true,
             name: true,
+            role: true,
+          },
+        },
+        task: {
+          select: {
+            id: true,
+            title: true,
           },
         },
         project: {
@@ -77,25 +96,25 @@ export const getActivities = async (
     });
   }
 
-  // Developer can see activity only for tasks assigned to them
   return prisma.activityLog.findMany({
     where: {
-      ...(projectId ? { projectId } : {}),
+      ...projectFilter,
       task: {
         assignedToId: userId,
       },
     },
     include: {
-      task: {
-        select: {
-          id: true,
-          title: true,
-        },
-      },
       user: {
         select: {
           id: true,
           name: true,
+          role: true,
+        },
+      },
+      task: {
+        select: {
+          id: true,
+          title: true,
         },
       },
       project: {

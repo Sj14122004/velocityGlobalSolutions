@@ -34,26 +34,30 @@ export const updateDeveloperSchema = z.object({
       .regex(/^\d+$/, "Developer ID must be a number"),
   }),
   body: z
-    .object({
-      name: z
-        .string()
-        .trim()
-        .min(1, "Developer name is required")
-        .max(100, "Developer name must be at most 100 characters")
-        .optional(),
-      email: z
-        .string()
-        .trim()
-        .email("Invalid email address")
-        .max(255, "Developer email must be at most 255 characters")
-        .optional(),
-    })
-    .refine(
-      (data) => data.name !== undefined || data.email !== undefined,
-      {
-        message: "At least one field is required",
-      }
-    ),
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(1, "Developer name is required")
+      .max(100, "Developer name must be at most 100 characters")
+      .optional(),
+    email: z
+      .string()
+      .trim()
+      .email("Invalid email address")
+      .max(255, "Developer email must be at most 255 characters")
+      .optional(),
+    isActive: z.boolean().optional(),
+  })
+  .refine(
+    (data) =>
+      data.name !== undefined ||
+      data.email !== undefined ||
+      data.isActive !== undefined,
+    {
+      message: "At least one field is required",
+    }
+  ),
 });
 
 export const deleteDeveloperSchema = z.object({

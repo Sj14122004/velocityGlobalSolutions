@@ -6,14 +6,12 @@ export const getActivitiesController = async (
   res: Response
 ) => {
   if (!req.user) {
-    res.status(401).json({
+    return res.status(401).json({
       success: false,
       error: {
-        code: "UNAUTHORIZED",
         message: "Authentication required",
       },
     });
-    return;
   }
 
   const projectId = req.query.projectId
@@ -26,7 +24,7 @@ export const getActivitiesController = async (
     projectId
   );
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     data: activities,
   });

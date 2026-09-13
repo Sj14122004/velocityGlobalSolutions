@@ -8,7 +8,6 @@ import {
   updateTask,
   deleteTask,
 } from "../services/taskService.js";
-import { getUnreadNotificationCount } from "../services/notificationService.js";
 
 export const createTaskController = (io: Server) => {
   return async (req: Request, res: Response) => {
@@ -26,6 +25,7 @@ export const createTaskController = (io: Server) => {
     const result = await createTask(
       req.user.id,
       req.user.role,
+      io,
       {
         projectId: req.body.projectId,
         title: req.body.title,
@@ -36,27 +36,9 @@ export const createTaskController = (io: Server) => {
       }
     );
 
-    const { task, notification } = result;
-
-    io.to(`user-${task.assignedToId}`).emit(
-      "notification-created",
-      notification
-    );
-
-    const unreadCount = await getUnreadNotificationCount(
-      task.assignedToId
-    );
-
-    io.to(`user-${task.assignedToId}`).emit(
-      "notification-count-updated",
-      {
-        count: unreadCount,
-      }
-    );
-
     res.status(201).json({
       success: true,
-      data: task,
+      data: result.task,
     });
   };
 };
@@ -172,6 +154,7 @@ export const updateTaskController = (io: Server) => {
       id,
       req.user.id,
       req.user.role,
+      io,
       {
         title: req.body.title,
         description: req.body.description,
@@ -182,28 +165,6 @@ export const updateTaskController = (io: Server) => {
           : undefined,
       }
     );
-
-    if (result.notification) {
-      const unreadCount = await getUnreadNotificationCount(
-        result.notification.userId
-      );
-
-      io.to(
-        `user-${result.notification.userId}`
-      ).emit(
-        "notification-created",
-        result.notification
-      );
-
-      io.to(
-        `user-${result.notification.userId}`
-      ).emit(
-        "notification-count-updated",
-        {
-          count: unreadCount,
-        }
-      );
-    }
 
     res.status(200).json({
       success: true,

@@ -1,9 +1,12 @@
 import { prisma } from "../lib/prisma.js";
 import type { Role } from "@prisma/client";
+import type { Server } from "socket.io";
+import { createNotification } from "./notificationService.js";
 
 export const createTask = async (
   userId: number,
   role: Role,
+  io: Server,
   data: {
     projectId: number;
     title: string;
@@ -13,7 +16,7 @@ export const createTask = async (
     dueDate: Date;
   }
 ) => {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const project = await tx.project.findUnique({
       where: {
         id: data.projectId,
@@ -61,19 +64,56 @@ export const createTask = async (
       },
     });
 
-    const notification = await tx.notification.create({
-      data: {
-        userId: data.assignedToId,
-        type: "TASK_ASSIGNED",
-        message: `You have been assigned to ${task.title}.`,
-      },
-    });
-
     return {
       task,
-      notification,
+      project,
     };
   });
+
+  const recipientIds = new Set<number>();
+
+  recipientIds.add(result.task.assignedToId);
+
+  if (result.project.createdById) {
+    recipientIds.add(result.project.createdById);
+  }
+
+  const admins = await prisma.user.findMany({
+    where: {
+      role: "ADMIN",
+      isActive: true,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  for (const admin of admins) {
+    recipientIds.add(admin.id);
+  }
+
+  const notifications = [];
+
+  for (const recipientId of recipientIds) {
+    const notification = await createNotification(
+      {
+        userId: recipientId,
+        type: "TASK_ASSIGNED",
+        message:
+          recipientId === result.task.assignedToId
+            ? `You have been assigned to ${result.task.title}.`
+            : `Task ${result.task.title} was assigned to a developer.`,
+      },
+      io
+    );
+
+    notifications.push(notification);
+  }
+
+  return {
+    task: result.task,
+    notifications,
+  };
 };
 
 export const getTasks = async (
@@ -92,13 +132,11 @@ export const getTasks = async (
           status: filters.status,
         }
       : {}),
-
     ...(filters.priority
       ? {
           priority: filters.priority,
         }
       : {}),
-
     ...(filters.dueFrom || filters.dueTo
       ? {
           dueDate: {
@@ -107,7 +145,6 @@ export const getTasks = async (
                   gte: filters.dueFrom,
                 }
               : {}),
-
             ...(filters.dueTo
               ? {
                   lte: filters.dueTo,
@@ -184,12 +221,11 @@ export const getTaskById = async (
   });
 };
 
-// Update Task
-
 export const updateTask = async (
   id: number,
   userId: number,
   role: Role,
+  io: Server,
   data: {
     title?: string;
     description?: string;
@@ -247,33 +283,59 @@ export const updateTask = async (
     data.assignedToId !== undefined &&
     data.assignedToId !== existingTask.assignedToId;
 
-  const result = await prisma.$transaction(async (tx) => {
-    const task = await tx.task.update({
-      where: {
-        id,
-      },
-      data,
-    });
-
-    let notification = null;
-
-    if (isReassigned) {
-      notification = await tx.notification.create({
-        data: {
-          userId: data.assignedToId!,
-          type: "TASK_ASSIGNED",
-          message: `You have been assigned to ${task.title}.`,
-        },
-      });
-    }
-
-    return {
-      task,
-      notification,
-    };
+  const task = await prisma.task.update({
+    where: {
+      id,
+    },
+    data,
   });
 
-  return result;
+  const notifications = [];
+
+  if (isReassigned) {
+    const recipientIds = new Set<number>();
+
+    recipientIds.add(data.assignedToId!);
+
+    if (existingTask.project.createdById) {
+      recipientIds.add(existingTask.project.createdById);
+    }
+
+    const admins = await prisma.user.findMany({
+      where: {
+        role: "ADMIN",
+        isActive: true,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    for (const admin of admins) {
+      recipientIds.add(admin.id);
+    }
+
+    for (const recipientId of recipientIds) {
+      const notification = await createNotification(
+        {
+          userId: recipientId,
+          type: "TASK_ASSIGNED",
+          message:
+            recipientId === data.assignedToId
+              ? `You have been assigned to ${task.title}.`
+              : `Task ${task.title} was reassigned to a developer.`,
+        },
+        io
+      );
+
+      notifications.push(notification);
+    }
+  }
+
+  return {
+    task,
+    notifications,
+  };
 };
 
 export const deleteTask = async (

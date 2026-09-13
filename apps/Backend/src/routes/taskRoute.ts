@@ -21,7 +21,6 @@ import { wrapAsync } from "../utils/wrapAsync.js";
 import { authenticate } from "../middleware/authMiddleware.js";
 import { authorize } from "../middleware/roleMiddleware.js";
 
-
 export const createTaskRoutes = (io: Server) => {
   const router = Router();
 
@@ -36,11 +35,7 @@ export const createTaskRoutes = (io: Server) => {
   router.get(
     "/",
     authenticate,
-    authorize(
-      "ADMIN",
-      "PROJECT_MANAGER",
-      "DEVELOPER"
-    ),
+    authorize("ADMIN", "PROJECT_MANAGER", "DEVELOPER"),
     validate(getTasksSchema),
     wrapAsync(getTasksController)
   );
@@ -48,11 +43,7 @@ export const createTaskRoutes = (io: Server) => {
   router.get(
     "/:id",
     authenticate,
-    authorize(
-      "ADMIN",
-      "PROJECT_MANAGER",
-      "DEVELOPER"
-    ),
+    authorize("ADMIN", "PROJECT_MANAGER", "DEVELOPER"),
     validate(getTaskByIdSchema),
     wrapAsync(getTaskByIdController)
   );
@@ -76,11 +67,7 @@ export const createTaskRoutes = (io: Server) => {
   router.patch(
     "/:id/status",
     authenticate,
-    authorize(
-      "ADMIN",
-      "PROJECT_MANAGER",
-      "DEVELOPER"
-    ),
+    authorize("ADMIN", "PROJECT_MANAGER", "DEVELOPER"),
     validate(updateTaskStatusSchema),
     wrapAsync(updateTaskStatusController(io))
   );

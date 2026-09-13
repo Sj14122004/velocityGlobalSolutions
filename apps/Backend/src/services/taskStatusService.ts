@@ -15,6 +15,8 @@ export const updateTaskStatus = async (
       include: {
         project: {
           select: {
+            id: true,
+            name: true,
             createdById: true,
           },
         },
@@ -32,16 +34,12 @@ export const updateTaskStatus = async (
       throw new Error("TASK_NOT_FOUND");
     }
 
-    // Developer can update only their assigned task
-
     if (
       role === "DEVELOPER" &&
       task.assignedToId !== userId
     ) {
       throw new Error("FORBIDDEN");
     }
-
-    // Project Manager can update only tasks in their own projects
 
     if (
       role === "PROJECT_MANAGER" &&
@@ -63,8 +61,6 @@ export const updateTaskStatus = async (
       },
     });
 
-    // Persist every status change
-
     const activity = await tx.activityLog.create({
       data: {
         taskId: task.id,
@@ -77,12 +73,11 @@ export const updateTaskStatus = async (
 
     let notification = null;
 
-    // Notify PM when the assigned Developer moves the task to In Review
-
     if (
       newStatus === "IN_REVIEW" &&
       role === "DEVELOPER" &&
-      task.assignedToId === userId
+      task.assignedToId === userId &&
+      task.project.createdById !== null
     ) {
       notification = await tx.notification.create({
         data: {
@@ -93,8 +88,6 @@ export const updateTaskStatus = async (
       });
     }
 
-    // Get the user who made the change
-
     const user = await tx.user.findUnique({
       where: {
         id: userId,
@@ -102,6 +95,7 @@ export const updateTaskStatus = async (
       select: {
         id: true,
         name: true,
+        role: true,
       },
     });
 
@@ -109,6 +103,7 @@ export const updateTaskStatus = async (
       task: updatedTask,
       activity,
       user,
+      project: task.project,
       projectManagerId: task.project.createdById,
       notification,
     };

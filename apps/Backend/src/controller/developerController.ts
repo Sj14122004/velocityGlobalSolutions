@@ -68,8 +68,9 @@ export const updateDeveloperController = async (
 ) => {
   const id = Number(req.params.id);
   const result = await updateDeveloper(id, {
-    name: req.body.name,
-    email: req.body.email,
+  name: req.body.name,
+  email: req.body.email,
+  isActive: req.body.isActive,
   });
   if (result.count === 0) {
     res.status(404).json({
