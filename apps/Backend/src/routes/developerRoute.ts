@@ -30,7 +30,7 @@ router.post(
 router.get(
   "/",
   authenticate,
-  authorize("ADMIN"),
+  authorize("ADMIN", "PROJECT_MANAGER"),
   wrapAsync(getDevelopersController)
 );
 

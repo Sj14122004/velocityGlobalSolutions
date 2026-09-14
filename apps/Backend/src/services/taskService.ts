@@ -39,15 +39,24 @@ export const createTask = async (
     }
 
     const developer = await tx.user.findFirst({
-      where: {
-        id: data.assignedToId,
-        role: "DEVELOPER",
-        isActive: true,
+  where: {
+    id: data.assignedToId,
+    role: "DEVELOPER",
+    isActive: true,
+    projectMembers: {
+      some: {
+        projectId: data.projectId,
       },
-      select: {
-        id: true,
-      },
-    });
+    },
+  },
+    select: {
+      id: true,
+    },
+  });
+
+    if (!developer) {
+      throw new Error("DEVELOPER_NOT_IN_PROJECT");
+    }
 
     if (!developer) {
       throw new Error("DEVELOPER_NOT_FOUND");
@@ -73,8 +82,8 @@ export const createTask = async (
   const recipientIds = new Set<number>();
 
   if (result.task.assignedToId !== null) {
-  recipientIds.add(result.task.assignedToId);
-}
+    recipientIds.add(result.task.assignedToId);
+  }
 
   if (result.project.createdById) {
     recipientIds.add(result.project.createdById);
@@ -157,9 +166,26 @@ export const getTasks = async (
       : {}),
   };
 
+  const include = {
+    project: {
+      select: {
+        id: true,
+        name: true,
+      },
+    },
+    assignedTo: {
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    },
+  };
+
   if (role === "ADMIN") {
     return prisma.task.findMany({
       where,
+      include,
       orderBy: {
         createdAt: "desc",
       },
@@ -174,6 +200,7 @@ export const getTasks = async (
           createdById: userId,
         },
       },
+      include,
       orderBy: {
         createdAt: "desc",
       },
@@ -185,6 +212,7 @@ export const getTasks = async (
       ...where,
       assignedToId: userId,
     },
+    include,
     orderBy: {
       createdAt: "desc",
     },
@@ -196,29 +224,64 @@ export const getTaskById = async (
   userId: number,
   role: Role
 ) => {
-  if (role === "ADMIN") {
-    return prisma.task.findUnique({
-      where: {
-        id,
-      },
-    });
-  }
-
-  if (role === "PROJECT_MANAGER") {
-    return prisma.task.findFirst({
-      where: {
-        id,
-        project: {
-          createdById: userId,
-        },
-      },
-    });
-  }
+  const accessFilter =
+    role === "ADMIN"
+      ? {}
+      : role === "PROJECT_MANAGER"
+        ? {
+            project: {
+              createdById: userId,
+            },
+          }
+        : {
+            assignedToId: userId,
+          };
 
   return prisma.task.findFirst({
     where: {
       id,
-      assignedToId: userId,
+      ...accessFilter,
+    },
+    include: {
+      project: {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          createdBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+      },
+      assignedTo: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          isActive: true,
+        },
+      },
+      activityLogs: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              role: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 20,
+      },
     },
   });
 };
@@ -300,7 +363,9 @@ export const updateTask = async (
     recipientIds.add(data.assignedToId!);
 
     if (existingTask.project.createdById) {
-      recipientIds.add(existingTask.project.createdById);
+      recipientIds.add(
+        existingTask.project.createdById
+      );
     }
 
     const admins = await prisma.user.findMany({

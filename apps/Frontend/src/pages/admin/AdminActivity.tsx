@@ -130,57 +130,61 @@ const AdminActivity = () => {
   return (
     <div className="admin-activity">
       <main className="activity-content">
-        <section className="activity-card">
-          <div className="activity-card-header">
-            <div>
-              <h2>Recent Activity</h2>
-              <p>Latest task status changes from your organization.</p>
-            </div>
-            <div className="activity-count">
-              {activities.length} Events
+        <section className="recent-users card">
+  <div className="card-title-row">
+    <div>
+      <h2>Live Activity</h2>
+      <p>Latest project and task status changes</p>
+    </div>
+  </div>
+
+  <div className="live-activity-list">
+    {activities.length === 0 ? (
+      <div className="live-activity-empty">
+        No recent activity.
+      </div>
+    ) : (
+      activities.map((activity) => (
+        <div
+          className="live-activity-item"
+          key={activity.id}
+        >
+          <div className="live-activity-icon">
+            ↗
+          </div>
+
+          <div className="live-activity-content">
+            <p className="live-activity-title">
+              {activity.user?.name || "User"} changed{" "}
+              {activity.task?.title || "task"} status
+            </p>
+
+            <p className="live-activity-meta">
+              {activity.project?.name || "Project"}
+            </p>
+
+            <div className="live-activity-status">
+              <span>
+                {formatStatus(activity.oldStatus)}
+              </span>
+
+              <span className="status-arrow">
+                →
+              </span>
+
+              <span>
+                {formatStatus(activity.newStatus)}
+              </span>
             </div>
           </div>
 
-          <div className="activity-list">
-            {activities.length > 0 ? (
-              activities.map((activity) => (
-                <div className="activity-item" key={activity.id}>
-                  <div className="activity-avatar">
-                    {(activity.user?.name || "U").charAt(0).toUpperCase()}
-                  </div>
-
-                  <div className="activity-details">
-                    <div className="activity-message">
-                      <strong>{activity.user?.name || "User"}</strong>
-                      <span> moved </span>
-                      <strong>
-                        {activity.task?.title || `Task #${activity.taskId}`}
-                      </strong>
-                      <span> from </span>
-                      <span className="activity-old-status">
-                        {formatStatus(activity.oldStatus)}
-                      </span>
-                      <span> → </span>
-                      <span className="activity-new-status">
-                        {formatStatus(activity.newStatus)}
-                      </span>
-                    </div>
-
-                    <div className="activity-meta">
-                      <span>
-                        {activity.project?.name ||
-                          `Project #${activity.projectId}`}
-                      </span>
-                      <span>·</span>
-                      <span>{formatTime(activity.createdAt)}</span>
-                    </div>
-                  </div>
-                </div>
+          <span className="live-activity-time">
+          {new Date(
+            activity.createdAt
+              ).toLocaleString()}
+              </span>
+            </div>
               ))
-            ) : (
-              <div className="empty-activity">
-                No activity found.
-              </div>
             )}
           </div>
         </section>

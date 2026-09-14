@@ -67,10 +67,10 @@ type DashboardResponse = {
 };
 
 const AdminDashboard = () => {
-  const { accessToken, logout } = useAuth();
+  const { accessToken, user, logout } = useAuth();
   const navigate = useNavigate();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
-  const [activities, setActivities] = useState<Activity[]>([]);
+  const [activities,setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search] = useState("");
@@ -126,7 +126,10 @@ const AdminDashboard = () => {
       setActivities([]);
       return;
     }
-
+    if (user?.role !== "ADMIN") {
+      navigate("/", { replace: true });
+      return;
+    }
     const fetchActivities = async () => {
       try {
         const response = await axios.get(
@@ -395,44 +398,6 @@ const AdminDashboard = () => {
             </div>
           </div>
         </section>
-
-        <section className="recent-users card">
-          <div className="card-title-row">
-            <div>
-              <h2>Live Activity</h2>
-              <p>Latest project and task status changes</p>
-            </div>
-          </div>
-          <div className="quick-action-list">
-            {activities.length === 0 ? (
-              <p>No recent activity.</p>
-            ) : (
-              activities.map((activity) => (
-                <div
-                  className="quick-action"
-                  key={activity.id}
-                >
-                  <div className="quick-icon">↗</div>
-                  <div>
-                    <strong>
-                      {activity.user?.name || "User"} moved{" "}
-                      {activity.task?.title || "task"}
-                    </strong>
-                    <span>
-                      {formatStatus(activity.oldStatus)} →{" "}
-                      {formatStatus(activity.newStatus)} •{" "}
-                      {activity.project?.name || "Project"} •{" "}
-                      {new Date(
-                        activity.createdAt
-                      ).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </section>
-
         <section className="recent-users card">
           <div className="card-title-row">
             <div>

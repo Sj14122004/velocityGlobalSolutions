@@ -390,17 +390,22 @@ export const AuthProvider = ({
     }
 
     const loggedInUser =
-      result.data.user as User;
+        result.data.user as User;
 
-    const token =
-      result.data.accessToken as string;
+      const token =
+        result.data.accessToken as string;
 
-    setUser(loggedInUser);
+      console.log(
+        "LOGGED IN USER:",
+        loggedInUser
+      );
 
-    sessionStorage.setItem(
-      "user",
-      JSON.stringify(loggedInUser)
-    );
+      setUser(loggedInUser);
+
+      sessionStorage.setItem(
+        "user",
+        JSON.stringify(loggedInUser)
+      );
 
     setAccessToken(token);
 

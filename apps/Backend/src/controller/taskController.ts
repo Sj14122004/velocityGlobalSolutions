@@ -12,33 +12,27 @@ import {
 export const createTaskController = (io: Server) => {
   return async (req: Request, res: Response) => {
     if (!req.user) {
-      res.status(401).json({
+      return res.status(401).json({
         success: false,
         error: {
-          code: "UNAUTHORIZED",
           message: "Authentication required",
         },
       });
-      return;
     }
 
     const result = await createTask(
       req.user.id,
       req.user.role,
       io,
-      {
-        projectId: req.body.projectId,
-        title: req.body.title,
-        description: req.body.description,
-        assignedToId: req.body.assignedToId,
-        priority: req.body.priority,
-        dueDate: new Date(req.body.dueDate),
-      }
+      req.body
     );
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      data: result.task,
+      data: {
+        task: result.task,
+        notifications: result.notifications,
+      },
     });
   };
 };

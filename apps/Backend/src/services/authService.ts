@@ -18,17 +18,18 @@ export const login = async (
   password: string
 ) => {
   const user = await prisma.user.findUnique({
-    where: {
-      email,
-    },
-    select: {
-      id: true,
-      email: true,
-      passwordHash: true,
-      role: true,
-      isActive: true,
-    },
-  });
+  where: {
+    email,
+  },
+  select: {
+    id: true,
+    name: true,
+    email: true,
+    passwordHash: true,
+    role: true,
+    isActive: true,
+  },
+});
 
   if (!user) {
     throw new Error("INVALID_CREDENTIALS");
@@ -73,10 +74,11 @@ export const login = async (
 
   return {
     user: {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-    },
+  id: user.id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+},
     accessToken,
     refreshToken,
   };

@@ -12,26 +12,42 @@ export const createProjectController = async (
   res: Response
 ) => {
   if (!req.user) {
-    res.status(401).json({
+    return res.status(401).json({
       success: false,
       error: {
-        code: "UNAUTHORIZED",
         message: "Authentication required",
       },
     });
-    return;
   }
 
-  const project = await createProject({
-    name: req.body.name,
-    description: req.body.description,
-    createdById: req.user.id,
-  });
+  try {
+    const project = await createProject(
+      req.user.id,
+      req.user.role,
+      req.body
+    );
 
-  res.status(201).json({
-    success: true,
-    data: project,
-  });
+    return res.status(201).json({
+      success: true,
+      data: project,
+    });
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message ===
+        "INVALID_DEVELOPERS"
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message:
+            "One or more selected developers are invalid or inactive.",
+        },
+      });
+    }
+
+    throw error;
+  }
 };
 
 export const getProjectsController = async (

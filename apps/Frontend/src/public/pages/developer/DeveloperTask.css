@@ -1,0 +1,468 @@
+.developer-tasks {
+  min-height: 100vh;
+  background: #f7f8fc;
+  color: #111827;
+}
+
+.developer-tasks-content {
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 34px 42px 55px;
+  box-sizing: border-box;
+}
+
+.developer-tasks-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 25px;
+  margin-bottom: 25px;
+}
+
+.developer-tasks-header > div > span {
+  color: #929baa;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.developer-tasks-header h1 {
+  margin: 8px 0 6px;
+  color: #111827;
+  font-size: 32px;
+  line-height: 1.15;
+  letter-spacing: -0.8px;
+}
+
+.developer-tasks-header p {
+  margin: 0;
+  color: #7b8494;
+  font-size: 13px;
+}
+
+.developer-dashboard-button {
+  height: 42px;
+  padding: 0 18px;
+  border: 1px solid #111827;
+  border-radius: 8px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.developer-dashboard-button:hover {
+  background: #1f2937;
+}
+
+.developer-task-stats {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 13px;
+  margin-bottom: 18px;
+}
+
+.developer-task-stats > div {
+  min-height: 105px;
+  padding: 17px;
+  border: 1px solid #e1e5eb;
+  border-radius: 10px;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.developer-task-stats span {
+  display: block;
+  color: #929baa;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+}
+
+.developer-task-stats strong {
+  display: block;
+  margin-top: 12px;
+  color: #202938;
+  font-size: 27px;
+  line-height: 1;
+}
+
+.developer-task-stats .developer-stat-overdue strong {
+  color: #dc2626;
+}
+
+.developer-task-card {
+  border: 1px solid #e1e5eb;
+  border-radius: 11px;
+  background: #ffffff;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.025);
+}
+
+.developer-task-toolbar {
+  min-height: 72px;
+  padding: 13px 18px;
+  border-bottom: 1px solid #edf0f3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.developer-search {
+  width: 320px;
+  height: 39px;
+  padding: 0 12px;
+  border: 1px solid #e0e4ea;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.developer-search span {
+  color: #9aa3b2;
+  font-size: 18px;
+}
+
+.developer-search input {
+  width: 100%;
+  border: none;
+  outline: none;
+  color: #374151;
+  font-family: inherit;
+  font-size: 10px;
+}
+
+.developer-search input::placeholder {
+  color: #a0a8b5;
+}
+
+.developer-filters {
+  display: flex;
+  gap: 8px;
+}
+
+.developer-filters select {
+  height: 39px;
+  padding: 0 10px;
+  border: 1px solid #e0e4ea;
+  border-radius: 7px;
+  outline: none;
+  background: #ffffff;
+  color: #596273;
+  font-family: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.developer-task-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.developer-task-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 950px;
+}
+
+.developer-task-table th {
+  height: 43px;
+  padding: 0 18px;
+  border-bottom: 1px solid #edf0f3;
+  background: #fafbfc;
+  color: #9aa3b2;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-align: left;
+}
+
+.developer-task-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid #f0f2f5;
+  color: #596273;
+  font-size: 10px;
+  vertical-align: middle;
+}
+
+.developer-task-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.developer-task-table tbody tr:hover {
+  background: #fafbff;
+}
+
+.developer-task-name {
+  padding: 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.developer-task-name strong {
+  display: block;
+  max-width: 260px;
+  overflow: hidden;
+  color: #273247;
+  font-size: 11px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.developer-task-name span {
+  display: block;
+  margin-top: 5px;
+  color: #a0a8b5;
+  font-size: 8px;
+}
+
+.developer-task-name:hover strong {
+  color: #4f46e5;
+}
+
+.developer-project-name {
+  display: block;
+  max-width: 190px;
+  overflow: hidden;
+  color: #697386;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.developer-status-badge,
+.developer-priority-badge {
+  display: inline-flex;
+  padding: 6px 9px;
+  border-radius: 5px;
+  font-size: 8px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.developer-status-badge.to_do {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.developer-status-badge.in_progress {
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+.developer-status-badge.in_review {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.developer-status-badge.done {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.developer-priority-badge.low {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.developer-priority-badge.medium {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.developer-priority-badge.high {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.developer-priority-badge.critical {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.developer-due-date {
+  color: #697386;
+}
+
+.developer-due-overdue {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.developer-status-action {
+  min-width: 125px;
+  height: 31px;
+  padding: 0 10px;
+  border: 1px solid #dfe3ea;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #4f46e5;
+  font-size: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.developer-status-action:hover {
+  border-color: #a5b4fc;
+  background: #f5f5ff;
+}
+
+.developer-status-action:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.developer-completed-label {
+  color: #059669;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.developer-no-tasks {
+  height: 160px;
+  color: #9aa3b2 !important;
+  text-align: center;
+}
+
+.developer-inline-error {
+  margin-bottom: 15px;
+  padding: 11px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 7px;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 10px;
+}
+
+.developer-tasks-loading {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  background: #f7f8fc;
+}
+
+.developer-tasks-spinner {
+  width: 27px;
+  height: 27px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #4f46e5;
+  border-radius: 50%;
+  animation: developer-task-spin 0.8s linear infinite;
+}
+
+.developer-tasks-loading p {
+  margin: 0;
+  color: #8b95a5;
+  font-size: 11px;
+}
+
+@keyframes developer-task-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.developer-tasks-error {
+  min-height: 70vh;
+  padding: 40px;
+  background: #f7f8fc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.developer-tasks-error-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 30px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  text-align: center;
+}
+
+.developer-tasks-error-card h2 {
+  margin: 0 0 8px;
+  color: #1f2937;
+  font-size: 18px;
+}
+
+.developer-tasks-error-card p {
+  margin: 0 0 20px;
+  color: #8b95a5;
+  font-size: 11px;
+}
+
+.developer-tasks-error-card button {
+  height: 40px;
+  padding: 0 17px;
+  border: none;
+  border-radius: 7px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+@media (max-width: 1100px) {
+  .developer-task-stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 750px) {
+  .developer-tasks-content {
+    padding: 24px 16px 40px;
+  }
+
+  .developer-tasks-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .developer-dashboard-button {
+    width: 100%;
+  }
+
+  .developer-task-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .developer-task-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .developer-search {
+    width: 100%;
+  }
+
+  .developer-filters {
+    width: 100%;
+  }
+
+  .developer-filters select {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .developer-task-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .developer-tasks-header h1 {
+    font-size: 27px;
+  }
+}

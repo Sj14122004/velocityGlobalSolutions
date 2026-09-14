@@ -11,35 +11,6 @@
   box-sizing: border-box;
 }
 
-.activity-card {
-  background: #ffffff;
-  border: 1px solid #e2e6ec;
-  border-radius: 13px;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.025);
-  padding: 24px;
-  margin-top: 10px;
-}
-.activity-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 20px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid #edf0f3;
-}
-.activity-card-header h2 {
-  margin: 0;
-  color: #121b2d;
-  font-size: 18px;
-  line-height: 1.2;
-  font-weight: 750;
-  letter-spacing: -0.4px;
-}
-.activity-card-header p {
-  margin: 5px 0 0;
-  color: #9099a9;
-  font-size: 11px;
-}
 .activity-count {
   color: #2563eb;
   font-size: 14px;
@@ -147,12 +118,6 @@
 @media (max-width: 600px) {
   .activity-content {
     padding: 0 14px 20px;
-  }
-  .activity-card {
-    padding: 18px;
-  }
-  .activity-card-header {
-    flex-direction: column;
   }
   .activity-message {
     font-size: 11px;

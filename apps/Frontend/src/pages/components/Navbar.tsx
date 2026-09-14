@@ -19,7 +19,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     logout();
-    navigate("/");
+    navigate("/", { replace: true });
   };
 
   const handleProfile = () => {
@@ -40,6 +40,45 @@ const Navbar = () => {
     }
 
     navigate("/developer/dashboard");
+  };
+
+  const handleProjects = () => {
+    if (user?.role === "ADMIN") {
+      navigate("/admin/projects");
+      return;
+    }
+
+    if (user?.role === "PROJECT_MANAGER") {
+      navigate("/pm/projects");
+    }
+  };
+
+  const handleTasks = () => {
+    if (user?.role === "ADMIN") {
+      navigate("/admin/tasks");
+      return;
+    }
+
+    if (user?.role === "PROJECT_MANAGER") {
+      navigate("/pm/tasks");
+      return;
+    }
+
+    navigate("/developer/tasks");
+  };
+
+  const handleActivity = () => {
+    if (user?.role === "ADMIN") {
+      navigate("/admin/activity");
+      return;
+    }
+
+    if (user?.role === "PROJECT_MANAGER") {
+      navigate("/pm/activity");
+      return;
+    }
+
+    navigate("/developer/activity");
   };
 
   const handleNotificationClick = async (
@@ -79,7 +118,7 @@ const Navbar = () => {
         <button
           type="button"
           className="navbar-logo"
-          onClick={() => navigate("/")}
+          onClick={handleDashboard}
         >
           <span className="navbar-logo-icon">
             V
@@ -111,7 +150,9 @@ const Navbar = () => {
             <button
               type="button"
               className="navbar-link"
-              onClick={() => navigate("/admin/users")}
+              onClick={() =>
+                navigate("/admin/users")
+              }
             >
               <svg
                 viewBox="0 0 24 24"
@@ -129,54 +170,57 @@ const Navbar = () => {
             </button>
           )}
 
-          <button
-            type="button"
-            className="navbar-link"
-            onClick={() => navigate("/admin/projects")}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
+          {(user?.role === "ADMIN" ||
+            user?.role === "PROJECT_MANAGER") && (
+            <button
+              type="button"
+              className="navbar-link"
+              onClick={handleProjects}
             >
-              <rect
-                x="3"
-                y="3"
-                width="7"
-                height="7"
-                rx="1"
-              />
-              <rect
-                x="14"
-                y="3"
-                width="7"
-                height="7"
-                rx="1"
-              />
-              <rect
-                x="3"
-                y="14"
-                width="7"
-                height="7"
-                rx="1"
-              />
-              <rect
-                x="14"
-                y="14"
-                width="7"
-                height="7"
-                rx="1"
-              />
-            </svg>
-            <span>Projects</span>
-          </button>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
+                <rect
+                  x="3"
+                  y="3"
+                  width="7"
+                  height="7"
+                  rx="1"
+                />
+                <rect
+                  x="14"
+                  y="3"
+                  width="7"
+                  height="7"
+                  rx="1"
+                />
+                <rect
+                  x="3"
+                  y="14"
+                  width="7"
+                  height="7"
+                  rx="1"
+                />
+                <rect
+                  x="14"
+                  y="14"
+                  width="7"
+                  height="7"
+                  rx="1"
+                />
+              </svg>
+              <span>Projects</span>
+            </button>
+          )}
 
           <button
             type="button"
             className="navbar-link"
-            onClick={() => navigate("/admin/tasks")}
+            onClick={handleTasks}
           >
             <svg
               viewBox="0 0 24 24"
@@ -202,7 +246,7 @@ const Navbar = () => {
           <button
             type="button"
             className="navbar-link"
-            onClick={() => navigate("/admin/activity")}
+            onClick={handleActivity}
           >
             <svg
               viewBox="0 0 24 24"
@@ -319,49 +363,63 @@ const Navbar = () => {
           )}
         </div>
 
-        <button
-          type="button"
-          className="navbar-profile"
-          onClick={handleProfile}
-          disabled={user?.role !== "ADMIN"}
-        >
-          <div className="navbar-avatar">
-            {user?.name
-              ?.charAt(0)
-              .toUpperCase() || "U"}
-          </div>
+        <div
+  className="navbar-profile"
+  onClick={() => {
+    if (user?.role === "ADMIN") {
+      navigate("/admin/profile");
+      return;
+    }
 
-          <div className="navbar-user-info">
-            <span className="navbar-user-name">
-              {user?.name || "User"}
-            </span>
+    if (user?.role === "PROJECT_MANAGER") {
+      navigate("/pm/profile");
+      return;
+    }
 
-            <span className="navbar-user-role">
-              {user?.role
-                ?.replace("_", " ")
-                .toLowerCase()}
-            </span>
-          </div>
-        </button>
+    if (user?.role === "DEVELOPER") {
+      navigate("/developer/profile");
+    }
+  }}
+>
+  <div className="navbar-avatar">
+    {user?.name
+      ? user.name.charAt(0).toUpperCase()
+      : "U"}
+  </div>
 
-        <button
-          type="button"
-          className="logout-btn"
-          onClick={handleLogout}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            aria-hidden="true"
-          >
-            <path d="M10 17l5-5-5-5" />
-            <path d="M15 12H3" />
-            <path d="M21 3v18" />
-          </svg>
-          <span>Logout</span>
-        </button>
+  <div className="navbar-user-info">
+    <span className="navbar-user-name">
+      {user?.name || "User"}
+    </span>
+
+    <span className="navbar-user-role">
+      {user?.role === "PROJECT_MANAGER"
+        ? "Project Manager"
+        : user?.role === "DEVELOPER"
+          ? "Developer"
+          : "Admin"}
+    </span>
+  </div>
+</div>
+
+<button
+  type="button"
+  className="logout-btn"
+  onClick={handleLogout}
+>
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    aria-hidden="true"
+  >
+    <path d="M10 17l5-5-5-5" />
+    <path d="M15 12H3" />
+    <path d="M21 3v18" />
+  </svg>
+  <span>Logout</span>
+</button>
       </div>
     </nav>
   );

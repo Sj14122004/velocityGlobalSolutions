@@ -7,7 +7,6 @@ export const createProjectSchema = z.object({
       .trim()
       .min(1, "Project name is required")
       .max(200, "Project name must be at most 200 characters"),
-
     description: z
       .string()
       .trim()
@@ -16,6 +15,9 @@ export const createProjectSchema = z.object({
         "Project description must be at most 2000 characters"
       )
       .optional(),
+    developerIds: z
+      .array(z.number().int().positive())
+      .min(1, "Select at least one developer"),
   }),
 });
 
