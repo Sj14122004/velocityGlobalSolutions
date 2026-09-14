@@ -94,15 +94,7 @@ const AdminActivity = () => {
     return "To Do";
   };
 
-  const formatTime = (date: string) => {
-    const value = new Date(date);
-    const seconds = Math.floor((Date.now() - value.getTime()) / 1000);
-
-    if (seconds < 60) return "Just now";
-    if (seconds < 3600) return `${Math.floor(seconds / 60)} mins ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
-    return `${Math.floor(seconds / 86400)} days ago`;
-  };
+  
 
   if (loading) {
     return (

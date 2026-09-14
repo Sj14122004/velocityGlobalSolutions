@@ -22,11 +22,6 @@ const Navbar = () => {
     navigate("/", { replace: true });
   };
 
-  const handleProfile = () => {
-    if (user?.role === "ADMIN") {
-      navigate("/admin/profile");
-    }
-  };
 
   const handleDashboard = () => {
     if (user?.role === "ADMIN") {

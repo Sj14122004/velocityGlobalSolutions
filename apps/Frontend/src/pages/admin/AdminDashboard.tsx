@@ -70,7 +70,7 @@ const AdminDashboard = () => {
   const { accessToken, user, logout } = useAuth();
   const navigate = useNavigate();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
-  const [activities,setActivities] = useState<Activity[]>([]);
+  const [, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search] = useState("");
@@ -190,12 +190,6 @@ const AdminDashboard = () => {
     return "Admin";
   };
 
-  const formatStatus = (status: string) => {
-    return status
-      .replace(/_/g, " ")
-      .toLowerCase()
-      .replace(/\b\w/g, (letter) => letter.toUpperCase());
-  };
 
   if (loading) {
     return (

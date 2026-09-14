@@ -158,19 +158,6 @@ const DeveloperDashboard = () => {
     return "To Do";
   };
 
-  const formatPriority = (
-    priority?: string
-  ) => {
-    if (!priority) {
-      return "Medium";
-    }
-
-    return (
-      priority.charAt(0) +
-      priority.slice(1).toLowerCase()
-    );
-  };
-
   const formatDate = (
     date: string
   ) => {
