@@ -158,7 +158,7 @@ const Login = () => {
               <input
                 id="email"
                 type="email"
-                placeholder="check in github readme.md at top"
+                placeholder="admin@velozity.com"
                 value={email}
                 onChange={(event) =>
                   setEmail(event.target.value)
@@ -176,7 +176,7 @@ const Login = () => {
               <input
                 id="password"
                 type="password"
-                placeholder="check in github readme.md at top"
+                placeholder="Password@123"
                 value={password}
                 onChange={(event) =>
                   setPassword(event.target.value)
